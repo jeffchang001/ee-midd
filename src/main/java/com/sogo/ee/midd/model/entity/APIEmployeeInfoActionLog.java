@@ -47,14 +47,11 @@ public class APIEmployeeInfoActionLog {
     @Column(name = "NewValue")
     private String newValue; // 變更後的值，對於刪除操作為null
 
-    @Column(name = "TenantID")
-    private String tenantID;
-
-    @Column(name = "CreatedBy")
-    private String createdBy;
-
     @Column(name = "CreatedDate", nullable = false)
     private LocalDateTime createdDate;
+
+    @Column(name = "IsSync")
+    private Boolean isSync = Boolean.FALSE;
 
     public APIEmployeeInfoActionLog(String employeeNo, String action, String fieldName, 
                                     String oldValue, String newValue) {
@@ -64,5 +61,6 @@ public class APIEmployeeInfoActionLog {
         this.oldValue = oldValue;
         this.newValue = newValue;
         this.actionDate = LocalDateTime.now();
+        this.createdDate = LocalDateTime.now();
     }
 }

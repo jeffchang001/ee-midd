@@ -15,8 +15,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.sogo.ee.midd.services.APIEmployeeInfoService;
-// import com.sogo.ee.midd.services.IAPIOrganizationInfoService;
-// import com.sogo.ee.midd.services.IAPIOrganizationRelationService;
 import com.sogo.ee.midd.services.APIOrganizationRelationService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +45,6 @@ public class FetchRadarDataController {
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("X-api-token", radarAPIToken);
-
 		HttpEntity<String> entity = new HttpEntity<>(headers);
 
 		if ("all".equals(orgTreeType)) {
@@ -77,7 +74,6 @@ public class FetchRadarDataController {
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("X-api-token", radarAPIToken);
-
 		HttpEntity<String> entity = new HttpEntity<>(headers);
 
 		if ("all".equals(employeeNo)) {
@@ -96,6 +92,30 @@ public class FetchRadarDataController {
 			e.printStackTrace();
 		}
 		return "APIEmployeeInfo data fetched and saved successfully!";
+	}
+
+
+	@GetMapping("/init-database")
+	public void initDatabase(@Autowired RestTemplate restTemplate) {
+
+		String apiUrl = radarAPIServerURI + "/api/Employee/EmployeeInfo";
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("X-api-token", radarAPIToken);
+		HttpEntity<String> entity = new HttpEntity<>(headers);
+
+		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(apiUrl).queryParam("employeeNos",
+				"");
+
+		ResponseEntity<String> response = restTemplate.exchange(builder.toUriString(), HttpMethod.GET, entity,
+				String.class);
+
+		try {
+			apiEmployeeInfoService.processEmployeeInfo(response);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 }

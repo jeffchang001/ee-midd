@@ -18,4 +18,11 @@ public interface IAPIEmployeeInfoRepository extends JpaRepository<APIEmployeeInf
 
     // 自動生成的方法，查詢 employedStatus = 1 的記錄
     List<APIEmployeeInfo> findByEmployedStatus(String employedStatus);
+    
+    // 新增的查詢方法：查詢 employedStatus = '1' 且 status = 'C' 的記錄
+    List<APIEmployeeInfo> findByEmployedStatusAndStatus(String employedStatus, String status);
+
+    // 自動生成的方法，查詢 employedStatus = 1 的記錄
+    List<APIEmployeeInfo> findByStatus(String status);
+
 }

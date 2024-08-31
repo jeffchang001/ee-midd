@@ -37,16 +37,29 @@ public class APIEmployeeInfoServiceTest {
     private EntityManager entityManager;
 
     @BeforeEach
+    @Rollback(false)
     @Transactional
-    void setUp() {
-        cleanDatabase();
-    }
-
-    @BeforeEach
-    private void cleanDatabase() {
-        employeeInfoRepo.deleteAll();
+    void setUp() throws Exception {
+         // 準備測試數據
+         String jsonFileName = "mock_employee_response.json";
+         InputStream jsonStream = getClass().getClassLoader().getResourceAsStream(jsonFileName);
+         assertNotNull(jsonStream, "Test JSON file not found: " + jsonFileName);
+ 
+         String jsonContent = new String(jsonStream.readAllBytes());
+         ResponseEntity<String> mockResponse = new ResponseEntity<>(jsonContent, HttpStatus.OK);
+ 
+         // 記錄初始數量
+         long initialEmployeeCount = employeeInfoRepo.count();
+         System.out.println("Initial employee count: " + initialEmployeeCount);
+ 
+         // 先初始化資料庫
+         apiEmployeeInfoService.initEmployeeInfo(mockResponse);
+         
+        // 強制刷新持久化上下文
         entityManager.flush();
         entityManager.clear();
+        
+        System.out.println("Test Setup completed");
     }
 
     @Test
@@ -54,16 +67,12 @@ public class APIEmployeeInfoServiceTest {
     @Transactional
     void testProcessEmployeeInfo() throws Exception {
         // 準備測試數據
-        String jsonFileName = "mock_employee_response.json";
+        String jsonFileName = "mock_employee_response_update.json";
         InputStream jsonStream = getClass().getClassLoader().getResourceAsStream(jsonFileName);
         assertNotNull(jsonStream, "Test JSON file not found: " + jsonFileName);
-
+        
         String jsonContent = new String(jsonStream.readAllBytes());
         ResponseEntity<String> mockResponse = new ResponseEntity<>(jsonContent, HttpStatus.OK);
-
-        // 記錄初始數量
-        long initialEmployeeCount = employeeInfoRepo.count();
-        System.out.println("Initial employee count: " + initialEmployeeCount);
 
         // 執行被測試的方法
         apiEmployeeInfoService.processEmployeeInfo(mockResponse);
@@ -75,12 +84,7 @@ public class APIEmployeeInfoServiceTest {
         // 記錄最終數量
         long finalEmployeeCount = employeeInfoRepo.count();
         System.out.println("Final employee count: " + finalEmployeeCount);
-
-        // 驗證數據是否增加
-        assertTrue(finalEmployeeCount > initialEmployeeCount,
-                "New employee data should be added. Initial: " + initialEmployeeCount + ", Final: "
-                        + finalEmployeeCount);
-
+        
         // 驗證保存的數據
         List<APIEmployeeInfo> savedEmployees = employeeInfoRepo.findAll();
         assertFalse(savedEmployees.isEmpty(), "Saved employees list should not be empty");

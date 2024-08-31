@@ -4,8 +4,7 @@ import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
@@ -43,6 +42,7 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 
 	@Transactional
 	public void processEmployeeInfo(ResponseEntity<String> response) throws Exception {
+		// TODO: 需要有初始化的資料庫, 避免系統異常
 
 		logger.info("Starting processEmployeeInfo");
 
@@ -64,7 +64,7 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 
 				// 步驟 2：清空當前表格並插入新數據
 				employeeInfoRepo.truncateTable();
-				logger.info("Table truncated");
+				logger.info("employeeInfoRepo Table truncated");
 
 				updateStatusForNewData(newEmployeeInfoList);
 				logger.info("Status updated for new data");
@@ -77,8 +77,8 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 				logger.info("Verified saved employee list size: " + verifiedList.size());
 
 				// // 生成操作日誌
-				// List<APIEmployeeInfoActionLog> actionLogs = generateActionLogs();
-				// actionLogRepo.saveAll(actionLogs);
+				generateActionLogs();
+
 			} else {
 				logger.warn("No new employee data to process");
 			}
@@ -92,10 +92,22 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 	}
 
 	private List<APIEmployeeInfoArchived> archiveCurrentData() {
-		List<APIEmployeeInfo> currentList = employeeInfoRepo.findAll();
-		List<APIEmployeeInfoArchived> archivedList = currentList.stream()
+		List<APIEmployeeInfo> currentEmployeeInfoList = employeeInfoRepo.findAll();
+		List<APIEmployeeInfoArchived> archivedList = currentEmployeeInfoList.stream()
 				.map(this::convertToArchived)
 				.collect(Collectors.toList());
+
+		List<APIEmployeeInfoArchived> theAPIEmployeeInfoArchived = archivedRepo.findAll();
+
+		System.out.println("currentEmployeeInfoList===" + currentEmployeeInfoList.size());
+		System.out.println("archivedList===" + archivedList.size());
+		System.out.println("theAPIEmployeeInfoArchived===" + theAPIEmployeeInfoArchived.size());
+		// 若 archived 有資料, 要先清除
+		if (theAPIEmployeeInfoArchived.size() > 0) {
+			archivedRepo.truncateTable();
+			logger.info("Archived table truncated");
+		}
+
 		return archivedRepo.saveAll(archivedList);
 	}
 
@@ -123,87 +135,165 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 			LocalDate createdDate = info.getDataCreatedDate().toLocalDate();
 			LocalDate modifiedDate = info.getDataModifiedDate().toLocalDate();
 
+			
+			logger.info("employeeno============"+info.getEmployeeNo());
+			logger.info("today============"+today);
+			logger.info("createdDate============"+createdDate);
+			logger.info("modifiedDate============"+modifiedDate);
+			logger.info("createdDate.isBefore(today)============"+createdDate.isBefore(today));
+			logger.info("createdDate.equals(today)============"+createdDate.equals(today));
+			logger.info("modifiedDate.equals(today)============"+modifiedDate.equals(today));
+			logger.info("employedStatus============"+info.getEmployedStatus());
+			
+
 			// TODO: 這個比較方式, 由於每30分鐘會執行一次, 因此現在的判斷方式不夠完善, 但為了先處理後續開發, 待改善
 			if (today.equals(createdDate) && today.equals(modifiedDate) && "1".equals(info.getEmployedStatus())) {
+				logger.info("ccc");
 				info.setStatus("C");
-			} else if (createdDate.isBefore(today) && modifiedDate.equals(today) && "1".equals(info.getEmployedStatus())) {
+			} else if ((createdDate.isBefore(today) || createdDate.equals(today)) && modifiedDate.equals(today) && "1".equals(info.getEmployedStatus())) {
 				info.setStatus("U");
-			} else if (createdDate.isBefore(today) && modifiedDate.equals(today) && !"1".equals(info.getEmployedStatus())) {
+				logger.info("uuu");
+			} else if ((createdDate.isBefore(today) || createdDate.equals(today)) && modifiedDate.equals(today) && !"1".equals(info.getEmployedStatus())) {
 				info.setStatus("D");
+				logger.info("ddd");
 			}
+			
+			logger.info("info.getStatus()============"+info.getStatus());
+			employeeInfoRepo.save(info);
 		}
 	}
 
-	private List<APIEmployeeInfoActionLog> generateActionLogs() {
+	private void generateActionLogs() {
+		List<APIEmployeeInfo> createAPIEmployeeInfoList = employeeInfoRepo.findByEmployedStatusAndStatus("1", "C");
+		List<APIEmployeeInfo> updateAPIEmployeeInfoList = employeeInfoRepo.findByStatus("U");
+		List<APIEmployeeInfo> deleteAPIEmployeeInfoList = employeeInfoRepo.findByStatus("D");
 
-		List<APIEmployeeInfo> newList = employeeInfoRepo.findByEmployedStatus("1");
-		List<APIEmployeeInfoArchived> archivedList = archivedRepo.findByEmployedStatus("1");
+		APIEmployeeInfoArchived tmpEmployInfoArchived = null;
+		APIEmployeeInfoActionLog tmpActionLog = null;
+		List<APIEmployeeInfoActionLog> tmpActionLogList = null;
 
-		System.out.println("Total elements in archivedList: " + archivedList.size());
-
-		// 檢查 key 是否重複
-		Map<String, Long> countMap = archivedList.stream()
-				.collect(Collectors.groupingBy(APIEmployeeInfoArchived::getEmployeeNo, Collectors.counting()));
-
-		countMap.entrySet().stream()
-				.filter(entry -> entry.getValue() > 1)
-				.forEach(entry -> System.out
-						.println("Duplicate employeeNo found: " + entry.getKey() + ", count: " + entry.getValue()));
-
-		Map<String, APIEmployeeInfoArchived> archivedMap = archivedList.stream()
-				.collect(Collectors.toMap(APIEmployeeInfoArchived::getEmployeeNo, Function.identity()));
-
-		List<APIEmployeeInfoActionLog> actionLogs = new ArrayList<>();
-
-		for (APIEmployeeInfo newInfo : newList) {
-			APIEmployeeInfoArchived oldInfo = archivedMap.remove(newInfo.getEmployeeNo());
-
-			if (oldInfo == null) {
-				// 新增操作
-				actionLogs.add(new APIEmployeeInfoActionLog(newInfo.getEmployeeNo(), "C", "employee_no", null,
-						newInfo.getEmployeeNo()));
+		// 處理可能需要新增的資料
+		for (APIEmployeeInfo apiEmployeeInfo : createAPIEmployeeInfoList) {
+			tmpEmployInfoArchived = archivedRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
+			if (tmpEmployInfoArchived == null) {
+				// employeeInfo.status=C, 確認 archived 中沒有資料, 代表需要新增 actionLog
+				tmpActionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "C", "employee_no", null,
+						apiEmployeeInfo.getEmployeeNo());
+				actionLogRepo.save(tmpActionLog);
 			} else {
-				// 更新操作
-				compareAndLogChanges(newInfo, oldInfo, actionLogs);
+				// employeeInfo.status=C, 且確認 archived 中有資料, actionLog 會有資料
+				continue;
 			}
 		}
 
-		// 處理刪除操作
-		for (APIEmployeeInfoArchived deletedInfo : archivedMap.values()) {
-			actionLogs.add(new APIEmployeeInfoActionLog(deletedInfo.getEmployeeNo(), "D", "employee_no",
-					deletedInfo.getEmployeeNo(), null));
+		// 處理可能需要更新的資料
+		for (APIEmployeeInfo apiEmployeeInfo : updateAPIEmployeeInfoList) {
+			tmpEmployInfoArchived = archivedRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
+			if (tmpEmployInfoArchived != null) {
+				tmpActionLogList = new ArrayList<APIEmployeeInfoActionLog>();
+				// Action 確認為更新資料, 存入 actionLog
+				compareAndLogChanges(apiEmployeeInfo, tmpEmployInfoArchived, tmpActionLogList);
+				actionLogRepo.saveAll(tmpActionLogList);
+			} else {
+				// 理論上不可能, 但若發生, 代表資料異常
+				apiEmployeeInfo.setStatus("E");
+				employeeInfoRepo.save(apiEmployeeInfo);
+			}
 		}
 
-		return actionLogs;
+		// 處理可能需要刪除的資料
+		for (APIEmployeeInfo apiEmployeeInfo : deleteAPIEmployeeInfoList) {
+			// 代表第一次判斷 employeeInfo=D, 但在 emploeeInfoArchived 中已經有資料了
+			tmpEmployInfoArchived = archivedRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
+			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndIsSync(apiEmployeeInfo.getEmployeeNo(), "D",
+					Boolean.FALSE);
+			if (tmpEmployInfoArchived != null && tmpActionLogList.size() == 0) {
+				// Action 確認為刪除資料, 存入 actionLog
+				tmpActionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "D", "employee_no", null,
+						null);
+				actionLogRepo.save(tmpActionLog);
+			} else {
+				// do nothing
+				continue;
+			}
+		}
+		// 檢查 key 是否重複
+		// Map<String, Long> countMap = archivedList.stream()
+		// .collect(Collectors.groupingBy(APIEmployeeInfoArchived::getEmployeeNo,
+		// Collectors.counting()));
+
+		// countMap.entrySet().stream()
+		// .filter(entry -> entry.getValue() > 1)
+		// .forEach(entry -> logger.info("Duplicate employeeNo found: " + entry.getKey()
+		// + ", count: " + entry.getValue()));
+
+		// 處理刪除操作
+		// for (APIEmployeeInfoArchived deletedInfo : archivedMap.values()) {
+		// actionLogs.add(new APIEmployeeInfoActionLog(deletedInfo.getEmployeeNo(), "D",
+		// "employee_no",
+		// deletedInfo.getEmployeeNo(), null));
+		// }
 	}
 
 	private void compareAndLogChanges(APIEmployeeInfo newInfo, APIEmployeeInfoArchived oldInfo,
 			List<APIEmployeeInfoActionLog> actionLogs) {
 		Field[] fields = APIEmployeeInfo.class.getDeclaredFields();
 		for (Field field : fields) {
+			if (field.getName().equals("id") || field.getName().equals("status")) {
+				// 忽略 id 和 status
+				continue;
+			}
 			field.setAccessible(true);
 			try {
 				Object newValue = field.get(newInfo);
-				Object oldValue = field.get(oldInfo);
 
-				// 檢查是否為基本型別 long，並進行轉換
-				if (field.getType() == long.class && oldValue != null) {
-					oldValue = ((Long) oldValue).longValue();
+				// 嘗試從 APIEmployeeInfoArchived 獲取相同名稱的欄位
+				Field oldField = null;
+				try {
+					oldField = APIEmployeeInfoArchived.class.getDeclaredField(field.getName());
+					oldField.setAccessible(true);
+				} catch (NoSuchFieldException e) {
+					// 如果欄位不存在，我們會跳過這個欄位的比較
+					logger.warn("Field {} not found in APIEmployeeInfoArchived", field.getName());
+					continue;
 				}
 
-				if (newValue != null && !newValue.equals(oldValue)) {
+				Object oldValue = oldField.get(oldInfo);
+
+				if (!Objects.equals(newValue, oldValue)) {
 					actionLogs.add(new APIEmployeeInfoActionLog(
 							newInfo.getEmployeeNo(),
 							"U",
 							field.getName(),
 							oldValue != null ? oldValue.toString() : null,
-							newValue.toString()));
+							newValue != null ? newValue.toString() : null));
 				}
 			} catch (IllegalAccessException e) {
-				// 日誌記錄錯誤
-				e.printStackTrace();
+				logger.error("Error accessing field: " + field.getName(), e);
 			}
 		}
 	}
 
+	@Transactional
+	public void initEmployeeInfo(ResponseEntity<String> response) throws Exception {
+		// 解析 JSON
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+		APIEmployeeInfoDto apiEmployeeInfoResponse = objectMapper.readValue(response.getBody(),
+				APIEmployeeInfoDto.class);
+
+		List<APIEmployeeInfo> newEmployeeInfoList = apiEmployeeInfoResponse.getResult();
+		// 儲存employeeInfo資料
+		employeeInfoRepo.truncateTable();
+		employeeInfoRepo.saveAll(newEmployeeInfoList);
+
+		List<APIEmployeeInfoArchived> archivedList = newEmployeeInfoList.stream()
+				.map(this::convertToArchived)
+				.collect(Collectors.toList());
+
+		// 複製並儲存 employeeInfoArchived 資料
+		archivedRepo.truncateTable();
+		archivedRepo.saveAll(archivedList);
+
+	}
 }
