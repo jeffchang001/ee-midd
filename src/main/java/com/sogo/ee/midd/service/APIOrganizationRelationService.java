@@ -1,4 +1,4 @@
-package com.sogo.ee.midd.services;
+package com.sogo.ee.midd.service;
 
 import org.springframework.http.ResponseEntity;
 

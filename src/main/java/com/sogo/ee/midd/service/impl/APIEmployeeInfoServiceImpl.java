@@ -1,4 +1,4 @@
-package com.sogo.ee.midd.services.impl;
+package com.sogo.ee.midd.service.impl;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
@@ -21,10 +21,10 @@ import com.sogo.ee.midd.model.dto.APIEmployeeInfoDto;
 import com.sogo.ee.midd.model.entity.APIEmployeeInfo;
 import com.sogo.ee.midd.model.entity.APIEmployeeInfoActionLog;
 import com.sogo.ee.midd.model.entity.APIEmployeeInfoArchived;
-import com.sogo.ee.midd.repository.IAPIEmployeeInfoActionLogRepository;
-import com.sogo.ee.midd.repository.IAPIEmployeeInfoArchivedRepository;
-import com.sogo.ee.midd.repository.IAPIEmployeeInfoRepository;
-import com.sogo.ee.midd.services.APIEmployeeInfoService;
+import com.sogo.ee.midd.repository.APIEmployeeInfoActionLogRepository;
+import com.sogo.ee.midd.repository.APIEmployeeInfoArchivedRepository;
+import com.sogo.ee.midd.repository.APIEmployeeInfoRepository;
+import com.sogo.ee.midd.service.APIEmployeeInfoService;
 
 @Service
 public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
@@ -32,13 +32,13 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 	private static final Logger logger = LoggerFactory.getLogger(APIEmployeeInfoServiceImpl.class);
 
 	@Autowired
-	private IAPIEmployeeInfoRepository employeeInfoRepo;
+	private APIEmployeeInfoRepository employeeInfoRepo;
 
 	@Autowired
-	private IAPIEmployeeInfoArchivedRepository archivedRepo;
+	private APIEmployeeInfoArchivedRepository archivedRepo;
 
 	@Autowired
-	private IAPIEmployeeInfoActionLogRepository actionLogRepo;
+	private APIEmployeeInfoActionLogRepository actionLogRepo;
 
 	@Transactional
 	public void processEmployeeInfo(ResponseEntity<String> response) throws Exception {

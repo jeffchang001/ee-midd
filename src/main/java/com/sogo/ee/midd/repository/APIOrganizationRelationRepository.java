@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.sogo.ee.midd.model.entity.APIOrganizationRelation;
 @Repository
-public interface IAPIOrganizationRelationRepository extends JpaRepository<APIOrganizationRelation, Long> {
+public interface APIOrganizationRelationRepository extends JpaRepository<APIOrganizationRelation, Long> {
 
     
     @Modifying

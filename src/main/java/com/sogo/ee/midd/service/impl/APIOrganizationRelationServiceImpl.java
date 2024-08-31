@@ -1,4 +1,4 @@
-package com.sogo.ee.midd.services.impl;
+package com.sogo.ee.midd.service.impl;
 
 import java.util.List;
 
@@ -14,8 +14,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.sogo.ee.midd.model.dto.APIOrganizationRelationDto;
 import com.sogo.ee.midd.model.entity.APIOrganizationRelation;
-import com.sogo.ee.midd.repository.IAPIOrganizationRelationRepository;
-import com.sogo.ee.midd.services.APIOrganizationRelationService;
+import com.sogo.ee.midd.repository.APIOrganizationRelationRepository;
+import com.sogo.ee.midd.service.APIOrganizationRelationService;
 
 @Service
 public class APIOrganizationRelationServiceImpl implements APIOrganizationRelationService {
@@ -23,7 +23,7 @@ public class APIOrganizationRelationServiceImpl implements APIOrganizationRelati
     private static final Logger logger = LoggerFactory.getLogger(APIOrganizationRelationServiceImpl.class);
 
     @Autowired
-    private IAPIOrganizationRelationRepository organizationRelationRepo;
+    private APIOrganizationRelationRepository organizationRelationRepo;
 
     @SuppressWarnings("null")
     @Override

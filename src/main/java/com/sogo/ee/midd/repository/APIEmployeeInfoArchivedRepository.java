@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.sogo.ee.midd.model.entity.APIEmployeeInfoArchived;
 
 @Repository
-public interface IAPIEmployeeInfoArchivedRepository extends JpaRepository<APIEmployeeInfoArchived, Long> {
+public interface APIEmployeeInfoArchivedRepository extends JpaRepository<APIEmployeeInfoArchived, Long> {
 
     @Modifying
     @Query(value = "TRUNCATE TABLE api_employee_info_archived", nativeQuery = true)

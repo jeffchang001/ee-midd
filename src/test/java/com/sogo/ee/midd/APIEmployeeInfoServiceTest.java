@@ -20,8 +20,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sogo.ee.midd.model.entity.APIEmployeeInfo;
-import com.sogo.ee.midd.repository.IAPIEmployeeInfoRepository;
-import com.sogo.ee.midd.services.impl.APIEmployeeInfoServiceImpl;
+import com.sogo.ee.midd.repository.APIEmployeeInfoRepository;
+import com.sogo.ee.midd.service.impl.APIEmployeeInfoServiceImpl;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -31,7 +31,7 @@ public class APIEmployeeInfoServiceTest {
     private APIEmployeeInfoServiceImpl apiEmployeeInfoService;
 
     @Autowired
-    private IAPIEmployeeInfoRepository employeeInfoRepo;
+    private APIEmployeeInfoRepository employeeInfoRepo;
 
     @Autowired
     private EntityManager entityManager;

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import com.sogo.ee.midd.model.entity.APIEmployeeInfoActionLog;
 
 @Repository
-public interface IAPIEmployeeInfoActionLogRepository extends JpaRepository<APIEmployeeInfoActionLog, Long> {
+public interface APIEmployeeInfoActionLogRepository extends JpaRepository<APIEmployeeInfoActionLog, Long> {
 
     List<APIEmployeeInfoActionLog> findByEmployeeNoAndAction(String employeeNo, String action);
 
