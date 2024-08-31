@@ -10,9 +10,9 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.sogo.employee</groupId>
-	<artifactId>midd</artifactId>
+	<artifactId>ee-midd</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>ee_midd</name>
+	<name>ee-midd</name>
 	<description>Sogo employee middle service platform</description>
 	<url />
 	<licenses>
