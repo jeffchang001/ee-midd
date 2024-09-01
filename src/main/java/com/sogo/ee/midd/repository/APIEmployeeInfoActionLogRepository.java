@@ -14,4 +14,10 @@ public interface APIEmployeeInfoActionLogRepository extends JpaRepository<APIEmp
 
     List<APIEmployeeInfoActionLog> findByEmployeeNoAndActionAndIsSync(String employeeNo, String action, Boolean isSync);
 
+    List<APIEmployeeInfoActionLog> findByIsSync(Boolean isSync);
+
+    List<APIEmployeeInfoActionLog> findByIsSyncAndAction(String isSync, String action);
+
+    List<APIEmployeeInfoActionLog> findByAction(String action);
+
 }

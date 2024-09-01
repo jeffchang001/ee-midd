@@ -175,7 +175,8 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 		// 處理可能需要新增的資料
 		for (APIEmployeeInfo apiEmployeeInfo : createAPIEmployeeInfoList) {
 			tmpEmployInfoArchived = archivedRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
-			if (tmpEmployInfoArchived == null) {
+			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndIsSync(apiEmployeeInfo.getEmployeeNo(), "C", Boolean.FALSE);
+			if (tmpEmployInfoArchived == null && tmpActionLogList.isEmpty()) {
 				// employeeInfo.status=C, 確認 archived 中沒有資料, 代表需要新增 actionLog
 				tmpActionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "C", "employee_no", null,
 						apiEmployeeInfo.getEmployeeNo());
@@ -189,7 +190,8 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 		// 處理可能需要更新的資料
 		for (APIEmployeeInfo apiEmployeeInfo : updateAPIEmployeeInfoList) {
 			tmpEmployInfoArchived = archivedRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
-			if (tmpEmployInfoArchived != null) {
+			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndIsSync(apiEmployeeInfo.getEmployeeNo(), "U", Boolean.FALSE);
+			if (tmpEmployInfoArchived != null && tmpActionLogList.isEmpty()) {
 				tmpActionLogList = new ArrayList<APIEmployeeInfoActionLog>();
 				// Action 確認為更新資料, 存入 actionLog
 				compareAndLogChanges(apiEmployeeInfo, tmpEmployInfoArchived, tmpActionLogList);

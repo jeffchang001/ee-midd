@@ -17,4 +17,7 @@ public interface APIOrganizationRelationRepository extends JpaRepository<APIOrga
     void truncateTable();
 
     List<APIOrganizationRelation> findByStatus(String status);
+
+    List<APIOrganizationRelation> findByOrgTreeType(String orgTreeType);
+
 }

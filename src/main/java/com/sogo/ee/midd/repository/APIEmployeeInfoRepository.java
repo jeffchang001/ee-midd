@@ -25,4 +25,6 @@ public interface APIEmployeeInfoRepository extends JpaRepository<APIEmployeeInfo
     // 自動生成的方法，查詢 employedStatus = 1 的記錄
     List<APIEmployeeInfo> findByStatus(String status);
 
+    APIEmployeeInfo findByEmployeeNo(String employeeNo);
+
 }
