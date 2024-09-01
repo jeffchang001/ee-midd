@@ -1,10 +1,8 @@
 package com.sogo.ee.midd.model.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class OrganizationHierarchyDto {
     private String orgCode;
     private String orgName;

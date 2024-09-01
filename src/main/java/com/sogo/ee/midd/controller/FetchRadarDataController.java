@@ -1,5 +1,7 @@
 package com.sogo.ee.midd.controller;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.sogo.ee.midd.model.dto.OrganizationHierarchyDto;
 import com.sogo.ee.midd.service.APIEmployeeInfoService;
 import com.sogo.ee.midd.service.APIOrganizationRelationService;
 
@@ -94,6 +97,11 @@ public class FetchRadarDataController {
 		return "APIEmployeeInfo data fetched and saved successfully!";
 	}
 
+	@GetMapping("/fetch-organizationRelationByOrgTreeType/{orgTreeType}")
+	public List<OrganizationHierarchyDto> fetchOrganizationRelationByOrgTreeType(
+			@PathVariable("orgTreeType") String orgTreeType) throws Exception {
+		return apiOrganizationRelationService.fetchOrganizationRelationByorgTreeType(orgTreeType);
+	}
 
 	@GetMapping("/init-database")
 	public void initDatabase(@Autowired RestTemplate restTemplate) {
@@ -115,7 +123,7 @@ public class FetchRadarDataController {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 
 }

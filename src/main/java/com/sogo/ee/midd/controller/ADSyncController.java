@@ -34,4 +34,6 @@ public class ADSyncController {
             return ResponseEntity.internalServerError().body("An error occurred while processing the request");
         }
     }
+    
+
 }

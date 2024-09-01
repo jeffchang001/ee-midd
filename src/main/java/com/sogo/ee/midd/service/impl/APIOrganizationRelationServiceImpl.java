@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.sogo.ee.midd.model.dto.APIOrganizationRelationDto;
+import com.sogo.ee.midd.model.dto.OrganizationHierarchyDto;
 import com.sogo.ee.midd.model.entity.APIOrganizationRelation;
 import com.sogo.ee.midd.repository.APIOrganizationRelationRepository;
 import com.sogo.ee.midd.service.APIOrganizationRelationService;
@@ -52,4 +53,22 @@ public class APIOrganizationRelationServiceImpl implements APIOrganizationRelati
         logger.info("Completed processOrganizationRelation");
     }
 
+    @Override
+    public List<OrganizationHierarchyDto> fetchOrganizationRelationByorgTreeType(String orgTreeType) throws Exception {
+        List<APIOrganizationRelation> apiOrganizationRelationList = organizationRelationRepo
+                .findByOrgTreeType(orgTreeType);
+
+        // Convert apiOrganizationRelationList to OrganizationHierarchyDtoList
+        List<OrganizationHierarchyDto> organizationHierarchyDtoList = apiOrganizationRelationList.stream()
+                .map(apiOrganizationRelation -> {
+                    OrganizationHierarchyDto dto = new OrganizationHierarchyDto();
+                    dto.setOrgCode(apiOrganizationRelation.getOrgCode());
+                    dto.setOrgName(apiOrganizationRelation.getOrgName());
+                    dto.setParentOrgCode(apiOrganizationRelation.getParentOrgCode());
+                    dto.setOrgLevel(0); // 設定 orgLevel 為 0
+                    return dto;
+                }).toList();
+
+        return organizationHierarchyDtoList;
+    }
 }
