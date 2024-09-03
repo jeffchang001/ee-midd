@@ -1,7 +1,7 @@
 package com.sogo.ee.midd.service.impl;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.transaction.Transactional;
 
@@ -15,7 +15,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.sogo.ee.midd.model.dto.APIOrganizationRelationDto;
 import com.sogo.ee.midd.model.dto.WholeOrgTreeDto;
-import com.sogo.ee.midd.model.entity.APIEmployeeInfo;
 import com.sogo.ee.midd.model.entity.APIOrganizationRelation;
 import com.sogo.ee.midd.repository.APIEmployeeInfoRepository;
 import com.sogo.ee.midd.repository.APIOrganizationRelationRepository;
@@ -48,6 +47,8 @@ public class APIOrganizationRelationServiceImpl implements APIOrganizationRelati
             List<APIOrganizationRelation> apiOrganizationRelationList = apiOrganizationRelationResponse.getResult();
             logger.info("Parsed OrganizationRelation list size: "
                     + (apiOrganizationRelationList != null ? apiOrganizationRelationList.size() : "null"));
+            
+            organizationRelationRepo.truncateTable();
 
             organizationRelationRepo.saveAll(apiOrganizationRelationList);
 
@@ -73,7 +74,8 @@ public class APIOrganizationRelationServiceImpl implements APIOrganizationRelati
             wholeOrgTreeDto.setOrgName(apiOrganizationRelation.getOrgName());
             wholeOrgTreeDto.setParentOrgCode(apiOrganizationRelation.getParentOrgCode());
             wholeOrgTreeDto.setOrgLevel(0);
-            wholeOrgTreeDto.setEmployeeInfoList(employeeInfoRepo.findEmployeesByOrgCode(apiOrganizationRelation.getOrgCode(), orgTreeType));
+            wholeOrgTreeDto.setEmployeeInfoList(
+                    employeeInfoRepo.findEmployeesByOrgCode(apiOrganizationRelation.getOrgCode(), orgTreeType));
 
             wholeOrgTreeDtoList.add(wholeOrgTreeDto);
         }

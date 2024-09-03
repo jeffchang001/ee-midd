@@ -23,7 +23,7 @@ public class ADSyncController {
     private ADSyncService adSyncService;
 
     @Operation(summary = "獲取 AD 同步數據", description = "此 API 端點返回所有 AD 同步數據的列表")
-    @GetMapping("/getADSyncData")
+    @GetMapping("/ad-sync-data")
     public ResponseEntity<?> getADSyncData() {
         try {
             List<ADSyncDto> adSyncData = adSyncService.getADSyncData();

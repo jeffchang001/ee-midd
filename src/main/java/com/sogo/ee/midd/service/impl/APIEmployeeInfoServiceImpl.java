@@ -99,9 +99,9 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 
 		List<APIEmployeeInfoArchived> theAPIEmployeeInfoArchived = archivedRepo.findAll();
 
-		System.out.println("currentEmployeeInfoList===" + currentEmployeeInfoList.size());
-		System.out.println("archivedList===" + archivedList.size());
-		System.out.println("theAPIEmployeeInfoArchived===" + theAPIEmployeeInfoArchived.size());
+		logger.debug("currentEmployeeInfoList===" + currentEmployeeInfoList.size());
+		logger.debug("archivedList===" + archivedList.size());
+		logger.debug("theAPIEmployeeInfoArchived===" + theAPIEmployeeInfoArchived.size());
 		// 若 archived 有資料, 要先清除
 		if (theAPIEmployeeInfoArchived.size() > 0) {
 			archivedRepo.truncateTable();

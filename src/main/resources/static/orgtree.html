@@ -124,7 +124,7 @@
         <input
           type="text"
           id="api-url"
-          value="https://7265-114-32-170-102.ngrok-free.app/ee-midd/fetch-organizationRelationByOrgTreeType/0"
+          value="https://0321-114-32-170-102.ngrok-free.app/ee-midd/organization-relations?tree-type=0"
           placeholder="Enter API URL"
         />
         <button onclick="fetchAndRenderTree()">Load Tree</button>
@@ -151,24 +151,35 @@
         const nodeMap = new Map();
         const rootNodes = [];
 
+        if (!data || !Array.isArray(data)) {
+          console.error("Invalid data format");
+          return null;
+        }
+
         data.forEach((item) => {
-          nodeMap.set(item.orgCode, {
-            id: item.orgCode,
-            data: item,
-            children: [],
-            level: 1,
-            descendantCount: 0,
-          });
+          if (item && item.orgCode) {
+            // 确保 item 和 orgCode 都被定义
+            nodeMap.set(item.orgCode, {
+              id: item.orgCode,
+              data: item,
+              children: [],
+              level: 1,
+              descendantCount: 0,
+            });
+          }
         });
 
         data.forEach((item) => {
-          const node = nodeMap.get(item.orgCode);
-          if (item.parentOrgCode && nodeMap.has(item.parentOrgCode)) {
-            const parent = nodeMap.get(item.parentOrgCode);
-            parent.children.push(node);
-            node.level = parent.level + 1;
-          } else {
-            rootNodes.push(node);
+          if (item && item.orgCode) {
+            // 再次检查 item 和 orgCode
+            const node = nodeMap.get(item.orgCode);
+            if (item.parentOrgCode && nodeMap.has(item.parentOrgCode)) {
+              const parent = nodeMap.get(item.parentOrgCode);
+              parent.children.push(node);
+              node.level = parent.level + 1;
+            } else {
+              rootNodes.push(node);
+            }
           }
         });
 
@@ -190,7 +201,7 @@
 
         rootNodes.forEach(sortChildren);
 
-        return rootNodes[0];
+        return rootNodes.length > 0 ? rootNodes[0] : null; // 确保返回一个根节点或 null
       }
 
       function renderTree(node, container) {
@@ -281,11 +292,10 @@
         childrenContainer.style.display = isExpanded ? "none" : "block";
         nodeElement.classList.toggle("expanded");
 
-        // 如果節點是通過點擊展開，則切換圖標為打開的文件夾圖標
         if (!isExpanded) {
-          iconElement.className = "node-icon folder-open"; // 打開文件夾圖標
+          iconElement.className = "node-icon folder-open";
         } else {
-          iconElement.className = "node-icon folder"; // 關閉文件夾圖標
+          iconElement.className = "node-icon folder";
         }
       }
 
@@ -296,8 +306,10 @@
           const node = findNodeByOrgCode(treeData, searchTerm);
           if (node) {
             expandToNode(node);
-            highlightNode(node);
-            focusNode(node);
+            setTimeout(() => {
+              highlightNode(node);
+              focusNode(node); // 這行新增，用於滾動到節點
+            }, 100);
           } else {
             alert("OrgCode not found");
           }
@@ -313,8 +325,10 @@
           const node = findNodeByEmployeeNo(treeData, searchTerm);
           if (node) {
             expandToNode(node);
-            highlightNode(node);
-            focusNode(node);
+            setTimeout(() => {
+              highlightNode(node);
+              focusNode(node); // 這行新增，用於滾動到節點
+            }, 100);
           } else {
             alert("EmployeeNo not found");
           }
@@ -355,13 +369,25 @@
           element.classList.add("highlighted");
         }
       }
-
+      
       function focusNode(node) {
         const element = document.getElementById(`node-${node.id}`);
         if (element) {
-          element.scrollIntoView({
+          // 獲取樹狀結構的容器
+          const container = document.getElementById("tree-container");
+
+          // 確定目標元素在容器內的相對位置
+          const containerRect = container.getBoundingClientRect();
+          const elementRect = element.getBoundingClientRect();
+
+          // 計算元素應滾動到的位置
+          const offsetTop =
+            elementRect.top - containerRect.top + container.scrollTop;
+
+          // 使用滾動行為平滑滾動
+          container.scrollTo({
+            top: offsetTop - container.clientHeight / 2, // 調整為容器高度的一半，使元素居中
             behavior: "smooth",
-            block: "center",
           });
         }
       }
@@ -381,21 +407,25 @@
             const childrenContainer = nodeElement.nextElementSibling;
             if (
               childrenContainer &&
+              childrenContainer.classList.contains("children") &&
               childrenContainer.style.display === "none"
             ) {
-              toggleNode(nodeElement, childrenContainer);
+              toggleNode(
+                nodeElement,
+                childrenContainer,
+                nodeElement.querySelector(".node-icon")
+              );
             }
           }
         }
       }
 
       function findParent(node, childId) {
-        if (node.children) {
-          for (let child of node.children) {
-            if (child.id === childId) return node;
-            const found = findParent(child, childId);
-            if (found) return found;
-          }
+        if (!node || !node.children) return null;
+        for (let child of node.children) {
+          if (child.id === childId) return node;
+          const found = findParent(child, childId);
+          if (found) return found;
         }
         return null;
       }
@@ -417,9 +447,16 @@
             return response.json();
           })
           .then((data) => {
+            if (!data || data.length === 0) {
+              throw new Error("No data received from API");
+            }
             console.log("Data fetched successfully");
             treeData = createTreeStructure(data);
-            renderTree(treeData, document.getElementById("tree-container"));
+            if (treeData) {
+              renderTree(treeData, document.getElementById("tree-container"));
+            } else {
+              throw new Error("Failed to create tree structure");
+            }
           })
           .catch((error) => {
             console.error("Error:", error);

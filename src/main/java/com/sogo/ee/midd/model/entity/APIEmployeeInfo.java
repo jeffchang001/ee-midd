@@ -228,9 +228,9 @@ public class APIEmployeeInfo {
     @Column(name = "DataModifiedUser")
     private String dataModifiedUser;
 
-    @JsonProperty("FunctionOrgPartyID")
-    @Column(name = "FunctionOrgPartyID")
-    private String functionOrgPartyID;
+    // @JsonProperty("FunctionOrgPartyID")
+    // @Column(name = "FunctionOrgPartyID")
+    // private String functionOrgPartyID;
 
     @JsonProperty("FunctionOrgCode")
     @Column(name = "FunctionOrgCode")

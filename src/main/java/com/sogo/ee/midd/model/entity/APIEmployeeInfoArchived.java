@@ -228,6 +228,22 @@ public class APIEmployeeInfoArchived {
     @Column(name = "DataModifiedUser")
     private String dataModifiedUser;
 
+    // @JsonProperty("FunctionOrgPartyID")
+    // @Column(name = "FunctionOrgPartyID")
+    // private String functionOrgPartyID;
+
+    @JsonProperty("FunctionOrgCode")
+    @Column(name = "FunctionOrgCode")
+    private String functionOrgCode;
+
+    @JsonProperty("FunctionOrgName")
+    @Column(name = "FunctionOrgName")
+    private String functionOrgName;
+
+    @JsonProperty("MVPN")
+    @Column(name = "MVPN")
+    private String mvpn;
+
     @Column(name = "Status")
     private String status;
 
