@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.sogo.ee.midd.model.entity.APIEmployeeInfo;
@@ -26,5 +27,8 @@ public interface APIEmployeeInfoRepository extends JpaRepository<APIEmployeeInfo
     List<APIEmployeeInfo> findByStatus(String status);
 
     APIEmployeeInfo findByEmployeeNo(String employeeNo);
+
+    @Query(value = "SELECT * FROM get_employees_by_org_code(:orgCode, :orgTreeType)", nativeQuery = true)
+    List<APIEmployeeInfo> findEmployeesByOrgCode(@Param("orgCode") String orgCode, @Param("orgTreeType") String orgTreeType);
 
 }

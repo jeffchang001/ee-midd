@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.sogo.ee.midd.model.dto.OrganizationHierarchyDto;
+import com.sogo.ee.midd.model.dto.WholeOrgTreeDto;
 import com.sogo.ee.midd.service.APIEmployeeInfoService;
 import com.sogo.ee.midd.service.APIOrganizationRelationService;
 
@@ -98,7 +99,7 @@ public class FetchRadarDataController {
 	}
 
 	@GetMapping("/fetch-organizationRelationByOrgTreeType/{orgTreeType}")
-	public List<OrganizationHierarchyDto> fetchOrganizationRelationByOrgTreeType(
+	public List<WholeOrgTreeDto> fetchOrganizationRelationByOrgTreeType(
 			@PathVariable("orgTreeType") String orgTreeType) throws Exception {
 		return apiOrganizationRelationService.fetchOrganizationRelationByorgTreeType(orgTreeType);
 	}
