@@ -1,471 +1,553 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LDAP-style Organization Tree with Employee List</title>
-    <style>
-      body,
-      html {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        height: 100%;
-      }
-      #container {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-      }
-      #search-container {
-        padding: 10px;
-        border-bottom: 1px solid #ccc;
-      }
-      #tree-container {
-        flex-grow: 1;
-        overflow: auto;
-        padding: 10px;
-        background-color: #f0f0f0;
-      }
-      .node {
-        position: relative;
-        cursor: pointer;
-        margin: 2px 0;
-        padding: 2px 0 2px 20px;
-        white-space: nowrap;
-      }
-      .children {
-        position: relative;
-        margin-left: 20px;
-        padding-left: 16px;
-        border-left: 1px solid #ccc;
-      }
-      .node::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 20px;
-        height: 50%;
-        border-bottom: 1px solid #ccc;
-      }
-      .node:last-child::before {
-        height: 50%;
-        border-left: 1px solid #ccc;
-      }
-      .node::after {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 0;
-        width: 20px;
-        height: 0;
-        border-top: 1px solid #ccc;
-      }
-      .node-icon {
-        display: inline-block;
-        width: 16px;
-        height: 16px;
-        margin-right: 5px;
-        background-size: contain;
-        vertical-align: middle;
-      }
-      .node-icon.folder {
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="goldenrod" viewBox="0 0 16 16"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9z"/></svg>');
-      }
-      .node-icon.folder-grey {
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="grey" viewBox="0 0 16 16"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9z"/></svg>');
-      }
-      .node-icon.folder-open {
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="goldenrod" viewBox="0 0 16 16"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9zM13.5 7h-9v5h9V7z"/></svg>');
-      }
-
-      .node-icon.user {
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="royalblue" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>');
-      }
-      .node-text {
-        vertical-align: middle;
-      }
-      .highlighted {
-        background-color: #ffffa0;
-      }
-      .expanded > .node-icon.folder {
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="goldenrod" viewBox="0 0 16 16"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9zM13.5 7h-9v5h9V7z"/></svg>');
-      }
-      .org-code {
-        color: #666;
-        margin-left: 5px;
-      }
-      .child-count,
-      .org-level {
-        color: #888;
-        font-size: 0.9em;
-        margin-left: 5px;
-      }
-      #api-url {
-        width: 600px;
-      }
-      .employee-list {
-        margin-top: 5px;
-        padding-left: 20px;
-        font-size: 0.9em;
-        color: #666;
-        list-style-type: none;
-      }
-      .employee-list li {
-        margin: 2px 0;
-        white-space: nowrap;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="container">
-      <div id="search-container">
-        <input
-          type="text"
-          id="api-url"
-          value="https://0321-114-32-170-102.ngrok-free.app/ee-midd/organization-relations?tree-type=0"
-          placeholder="Enter API URL"
-        />
-        <button onclick="fetchAndRenderTree()">Load Tree</button>
-        <input
-          type="text"
-          id="search-org-input"
-          placeholder="Search by orgCode"
-        />
-        <button onclick="searchAndHighlightOrg()">Search Org</button>
-        <input
-          type="text"
-          id="search-employee-input"
-          placeholder="Search by employeeNo"
-        />
-        <button onclick="searchAndHighlightEmployee()">Search Employee</button>
-      </div>
-      <div id="tree-container"></div>
-    </div>
-
-    <script>
-      let treeData;
-
-      function createTreeStructure(data) {
-        const nodeMap = new Map();
-        const rootNodes = [];
-
-        if (!data || !Array.isArray(data)) {
-          console.error("Invalid data format");
-          return null;
-        }
-
-        data.forEach((item) => {
-          if (item && item.orgCode) {
-            // 确保 item 和 orgCode 都被定义
-            nodeMap.set(item.orgCode, {
-              id: item.orgCode,
-              data: item,
-              children: [],
-              level: 1,
-              descendantCount: 0,
-            });
-          }
-        });
-
-        data.forEach((item) => {
-          if (item && item.orgCode) {
-            // 再次检查 item 和 orgCode
-            const node = nodeMap.get(item.orgCode);
-            if (item.parentOrgCode && nodeMap.has(item.parentOrgCode)) {
-              const parent = nodeMap.get(item.parentOrgCode);
-              parent.children.push(node);
-              node.level = parent.level + 1;
-            } else {
-              rootNodes.push(node);
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>LDAP-style Organization Tree with Employee List</title>
+        <style>
+            body,
+            html {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                height: 100%;
             }
-          }
-        });
-
-        function countDescendants(node) {
-          let count = node.children.length;
-          for (let child of node.children) {
-            count += countDescendants(child);
-          }
-          node.descendantCount = count;
-          return count;
-        }
-
-        rootNodes.forEach(countDescendants);
-
-        function sortChildren(node) {
-          node.children.sort((a, b) => b.descendantCount - a.descendantCount);
-          node.children.forEach(sortChildren);
-        }
-
-        rootNodes.forEach(sortChildren);
-
-        return rootNodes.length > 0 ? rootNodes[0] : null; // 确保返回一个根节点或 null
-      }
-
-      function renderTree(node, container) {
-        container.innerHTML = "";
-        renderNode(node, container);
-      }
-      function renderNode(node, container) {
-        const nodeElement = document.createElement("div");
-        nodeElement.className = "node";
-        nodeElement.id = `node-${node.id}`;
-
-        const iconElement = document.createElement("span");
-
-        // 設置圖標邏輯：
-        // 1. 沒有子節點且沒有員工列表：灰色文件夾圖標
-        // 2. 沒有子節點但有員工列表：打開的文件夾圖標
-        // 3. 有子節點：默認關閉文件夾圖標
-        if (node.children.length === 0) {
-          if (
-            node.data.employeeInfoList &&
-            node.data.employeeInfoList.length > 0
-          ) {
-            iconElement.className = "node-icon folder-open"; // 打開文件夾圖標
-          } else {
-            iconElement.className = "node-icon folder-grey"; // 灰色文件夾圖標
-          }
-        } else {
-          iconElement.className = "node-icon folder"; // 默認關閉文件夾圖標
-        }
-
-        nodeElement.appendChild(iconElement);
-
-        const textElement = document.createElement("span");
-        textElement.className = "node-text";
-        textElement.textContent = `${node.data.orgName}(${node.id})`;
-        nodeElement.appendChild(textElement);
-
-        const childCountElement = document.createElement("span");
-        childCountElement.className = "child-count";
-        childCountElement.textContent = `[${node.children.length}]`;
-        nodeElement.appendChild(childCountElement);
-
-        const orgLevelElement = document.createElement("span");
-        orgLevelElement.className = "org-level";
-        orgLevelElement.textContent = `org-level:${node.level}`;
-        nodeElement.appendChild(orgLevelElement);
-
-        // 建立員工列表
-        if (
-          node.data.employeeInfoList &&
-          node.data.employeeInfoList.length > 0
-        ) {
-          const employeeListElement = document.createElement("ul");
-          employeeListElement.className = "employee-list";
-          node.data.employeeInfoList.forEach((employee) => {
-            if (employee.EmployedStatus === "1") {
-              const employeeElement = document.createElement("li");
-              employeeElement.innerHTML = `<span class="node-icon user"></span>${employee.EmployeeNo} - ${employee.JobTitleName} - ${employee.FullName}`;
-              employeeListElement.appendChild(employeeElement);
+            #container {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
             }
-          });
-          if (employeeListElement.children.length > 0) {
-            nodeElement.appendChild(employeeListElement);
-          }
-        }
+            #search-container {
+                padding: 10px;
+                border-bottom: 1px solid #ccc;
+            }
+            #tree-container {
+                flex-grow: 1;
+                overflow: auto;
+                padding: 10px;
+                background-color: #f0f0f0;
+            }
+            .node {
+                position: relative;
+                cursor: pointer;
+                margin: 2px 0;
+                padding: 2px 0 2px 20px;
+                white-space: nowrap;
+            }
+            .children {
+                position: relative;
+                margin-left: 20px;
+                padding-left: 16px;
+                border-left: 1px solid #ccc;
+            }
+            .node::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 20px;
+                height: 50%;
+                border-bottom: 1px solid #ccc;
+            }
+            .node:last-child::before {
+                height: 50%;
+                border-left: 1px solid #ccc;
+            }
+            .node::after {
+                content: "";
+                position: absolute;
+                top: 50%;
+                left: 0;
+                width: 20px;
+                height: 0;
+                border-top: 1px solid #ccc;
+            }
+            .node-icon {
+                display: inline-block;
+                width: 16px;
+                height: 16px;
+                margin-right: 5px;
+                background-size: contain;
+                vertical-align: middle;
+            }
+            .node-icon.folder {
+                background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="goldenrod" viewBox="0 0 16 16"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9z"/></svg>');
+            }
+            .node-icon.folder-grey {
+                background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="grey" viewBox="0 0 16 16"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9z"/></svg>');
+            }
+            .node-icon.folder-open {
+                background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="goldenrod" viewBox="0 0 16 16"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9zM13.5 7h-9v5h9V7z"/></svg>');
+            }
 
-        container.appendChild(nodeElement);
+            .node-icon.user {
+                background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="royalblue" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg>');
+            }
+            .node-text {
+                vertical-align: middle;
+            }
+            .highlighted {
+                background-color: #ffffa0;
+            }
+            .expanded > .node-icon.folder {
+                background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="goldenrod" viewBox="0 0 16 16"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9zM13.5 7h-9v5h9V7z"/></svg>');
+            }
+            .org-code {
+                color: #666;
+                margin-left: 5px;
+            }
+            .child-count,
+            .org-level {
+                color: #888;
+                font-size: 0.9em;
+                margin-left: 5px;
+            }
+            #api-url {
+                width: 600px;
+            }
+            .employee-list {
+                margin-top: 5px;
+                padding-left: 20px;
+                font-size: 0.9em;
+                color: #666;
+                list-style-type: none;
+            }
+            .employee-list li {
+                margin: 2px 0;
+                white-space: nowrap;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <div id="search-container">
+                <input
+                    type="text"
+                    id="api-url"
+                    value="http://114.32.170.102:8080/ee-midd/organization-relations?tree-type=0"
+                    placeholder="Enter API URL"
+                />
+                <button onclick="fetchAndRenderTree()">Load Tree</button>
+                <input
+                    type="text"
+                    id="search-org-input"
+                    placeholder="Search by orgCode"
+                />
+                <button onclick="searchAndHighlightOrg()">Search Org</button>
+                <input
+                    type="text"
+                    id="search-employee-input"
+                    placeholder="Search by employeeNo"
+                />
+                <button onclick="searchAndHighlightEmployee()">
+                    Search Employee
+                </button>
 
-        // 如果節點有子節點，則可以點擊展開/折疊
-        if (node.children && node.children.length > 0) {
-          const childrenContainer = document.createElement("div");
-          childrenContainer.className = "children";
-          childrenContainer.style.display = "none";
-          node.children.forEach((child) =>
-            renderNode(child, childrenContainer)
-          );
-          container.appendChild(childrenContainer);
+                <button onclick="exportToExcel()">匯出成 Excel</button>
+            </div>
+            <div id="tree-container"></div>
+        </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+        <script>
+            let treeData;
 
-          nodeElement.onclick = (event) => {
-            event.stopPropagation();
-            toggleNode(nodeElement, childrenContainer, iconElement);
-          };
-        }
-      }
+            function createTreeStructure(data) {
+                const nodeMap = new Map();
+                const rootNodes = [];
 
-      function toggleNode(nodeElement, childrenContainer, iconElement) {
-        const isExpanded = childrenContainer.style.display === "block";
-        childrenContainer.style.display = isExpanded ? "none" : "block";
-        nodeElement.classList.toggle("expanded");
+                if (!data || !Array.isArray(data)) {
+                    console.error("Invalid data format");
+                    return null;
+                }
 
-        if (!isExpanded) {
-          iconElement.className = "node-icon folder-open";
-        } else {
-          iconElement.className = "node-icon folder";
-        }
-      }
+                data.forEach((item) => {
+                    if (item && item.orgCode) {
+                        // 确保 item 和 orgCode 都被定义
+                        nodeMap.set(item.orgCode, {
+                            id: item.orgCode,
+                            data: item,
+                            children: [],
+                            level: 1,
+                            descendantCount: 0,
+                        });
+                    }
+                });
 
-      function searchAndHighlightOrg() {
-        const searchTerm = document.getElementById("search-org-input").value;
-        clearHighlights();
-        if (searchTerm) {
-          const node = findNodeByOrgCode(treeData, searchTerm);
-          if (node) {
-            expandToNode(node);
-            setTimeout(() => {
-              highlightNode(node);
-              focusNode(node); // 這行新增，用於滾動到節點
-            }, 100);
-          } else {
-            alert("OrgCode not found");
-          }
-        }
-      }
+                data.forEach((item) => {
+                    if (item && item.orgCode) {
+                        // 再次检查 item 和 orgCode
+                        const node = nodeMap.get(item.orgCode);
+                        if (
+                            item.parentOrgCode &&
+                            nodeMap.has(item.parentOrgCode)
+                        ) {
+                            const parent = nodeMap.get(item.parentOrgCode);
+                            parent.children.push(node);
+                            node.level = parent.level + 1;
+                        } else {
+                            rootNodes.push(node);
+                        }
+                    }
+                });
 
-      function searchAndHighlightEmployee() {
-        const searchTerm = document.getElementById(
-          "search-employee-input"
-        ).value;
-        clearHighlights();
-        if (searchTerm) {
-          const node = findNodeByEmployeeNo(treeData, searchTerm);
-          if (node) {
-            expandToNode(node);
-            setTimeout(() => {
-              highlightNode(node);
-              focusNode(node); // 這行新增，用於滾動到節點
-            }, 100);
-          } else {
-            alert("EmployeeNo not found");
-          }
-        }
-      }
+                function countDescendants(node) {
+                    let count = node.children.length;
+                    for (let child of node.children) {
+                        count += countDescendants(child);
+                    }
+                    node.descendantCount = count;
+                    return count;
+                }
 
-      function clearHighlights() {
-        document
-          .querySelectorAll(".highlighted")
-          .forEach((el) => el.classList.remove("highlighted"));
-      }
+                rootNodes.forEach(countDescendants);
 
-      function findNodeByOrgCode(node, orgCode) {
-        if (node.id === orgCode) return node;
-        for (let child of node.children) {
-          const found = findNodeByOrgCode(child, orgCode);
-          if (found) return found;
-        }
-        return null;
-      }
+                function sortChildren(node) {
+                    node.children.sort(
+                        (a, b) => b.descendantCount - a.descendantCount
+                    );
+                    node.children.forEach(sortChildren);
+                }
 
-      function findNodeByEmployeeNo(node, employeeNo) {
-        if (node.data.employeeInfoList) {
-          for (let employee of node.data.employeeInfoList) {
-            if (employee.EmployeeNo === employeeNo) return node;
-          }
-        }
-        for (let child of node.children) {
-          const found = findNodeByEmployeeNo(child, employeeNo);
-          if (found) return found;
-        }
-        return null;
-      }
+                rootNodes.forEach(sortChildren);
 
-      function highlightNode(node) {
-        const element = document.getElementById(`node-${node.id}`);
-        if (element) {
-          element.classList.add("highlighted");
-        }
-      }
-      
-      function focusNode(node) {
-        const element = document.getElementById(`node-${node.id}`);
-        if (element) {
-          // 獲取樹狀結構的容器
-          const container = document.getElementById("tree-container");
+                return rootNodes.length > 0 ? rootNodes[0] : null; // 确保返回一个根节点或 null
+            }
 
-          // 確定目標元素在容器內的相對位置
-          const containerRect = container.getBoundingClientRect();
-          const elementRect = element.getBoundingClientRect();
+            function renderTree(node, container) {
+                container.innerHTML = "";
+                renderNode(node, container);
+            }
+            function renderNode(node, container) {
+                const nodeElement = document.createElement("div");
+                nodeElement.className = "node";
+                nodeElement.id = `node-${node.id}`;
 
-          // 計算元素應滾動到的位置
-          const offsetTop =
-            elementRect.top - containerRect.top + container.scrollTop;
+                const iconElement = document.createElement("span");
 
-          // 使用滾動行為平滑滾動
-          container.scrollTo({
-            top: offsetTop - container.clientHeight / 2, // 調整為容器高度的一半，使元素居中
-            behavior: "smooth",
-          });
-        }
-      }
+                // 設置圖標邏輯：
+                // 1. 沒有子節點且沒有員工列表：灰色文件夾圖標
+                // 2. 沒有子節點但有員工列表：打開的文件夾圖標
+                // 3. 有子節點：默認關閉文件夾圖標
+                if (node.children.length === 0) {
+                    if (
+                        node.data.employeeInfoList &&
+                        node.data.employeeInfoList.length > 0
+                    ) {
+                        iconElement.className = "node-icon folder-open"; // 打開文件夾圖標
+                    } else {
+                        iconElement.className = "node-icon folder-grey"; // 灰色文件夾圖標
+                    }
+                } else {
+                    iconElement.className = "node-icon folder"; // 默認關閉文件夾圖標
+                }
 
-      function expandToNode(node) {
-        let current = node;
-        let path = [];
-        while (current && current.id !== treeData.id) {
-          path.unshift(current);
-          current = findParent(treeData, current.id);
-        }
-        path.unshift(treeData);
+                nodeElement.appendChild(iconElement);
 
-        for (let i = 0; i < path.length; i++) {
-          const nodeElement = document.getElementById(`node-${path[i].id}`);
-          if (nodeElement) {
-            const childrenContainer = nodeElement.nextElementSibling;
-            if (
-              childrenContainer &&
-              childrenContainer.classList.contains("children") &&
-              childrenContainer.style.display === "none"
+                const textElement = document.createElement("span");
+                textElement.className = "node-text";
+                textElement.textContent = `${node.data.orgName}(${node.id})`;
+                nodeElement.appendChild(textElement);
+
+                const childCountElement = document.createElement("span");
+                childCountElement.className = "child-count";
+                childCountElement.textContent = `[${node.children.length}]`;
+                nodeElement.appendChild(childCountElement);
+
+                const orgLevelElement = document.createElement("span");
+                orgLevelElement.className = "org-level";
+                orgLevelElement.textContent = `org-level:${node.level}`;
+                nodeElement.appendChild(orgLevelElement);
+
+                // 建立員工列表
+                if (
+                    node.data.employeeInfoList &&
+                    node.data.employeeInfoList.length > 0
+                ) {
+                    const employeeListElement = document.createElement("ul");
+                    employeeListElement.className = "employee-list";
+                    node.data.employeeInfoList.forEach((employee) => {
+                        if (employee.EmployedStatus === "1") {
+                            const employeeElement =
+                                document.createElement("li");
+                            employeeElement.innerHTML = `<span class="node-icon user"></span>${employee.EmployeeNo} - ${employee.JobTitleName} - ${employee.FullName}`;
+                            employeeListElement.appendChild(employeeElement);
+                        }
+                    });
+                    if (employeeListElement.children.length > 0) {
+                        nodeElement.appendChild(employeeListElement);
+                    }
+                }
+
+                container.appendChild(nodeElement);
+
+                // 如果節點有子節點，則可以點擊展開/折疊
+                if (node.children && node.children.length > 0) {
+                    const childrenContainer = document.createElement("div");
+                    childrenContainer.className = "children";
+                    childrenContainer.style.display = "none";
+                    node.children.forEach((child) =>
+                        renderNode(child, childrenContainer)
+                    );
+                    container.appendChild(childrenContainer);
+
+                    nodeElement.onclick = (event) => {
+                        event.stopPropagation();
+                        toggleNode(nodeElement, childrenContainer, iconElement);
+                    };
+                }
+            }
+
+            function toggleNode(nodeElement, childrenContainer, iconElement) {
+                const isExpanded = childrenContainer.style.display === "block";
+                childrenContainer.style.display = isExpanded ? "none" : "block";
+                nodeElement.classList.toggle("expanded");
+
+                if (!isExpanded) {
+                    iconElement.className = "node-icon folder-open";
+                } else {
+                    iconElement.className = "node-icon folder";
+                }
+            }
+
+            function searchAndHighlightOrg() {
+                const searchTerm =
+                    document.getElementById("search-org-input").value;
+                clearHighlights();
+                if (searchTerm) {
+                    const node = findNodeByOrgCode(treeData, searchTerm);
+                    if (node) {
+                        expandToNode(node);
+                        setTimeout(() => {
+                            highlightNode(node);
+                            focusNode(node); // 這行新增，用於滾動到節點
+                        }, 100);
+                    } else {
+                        alert("OrgCode not found");
+                    }
+                }
+            }
+
+            function searchAndHighlightEmployee() {
+                const searchTerm = document.getElementById(
+                    "search-employee-input"
+                ).value;
+                clearHighlights();
+                if (searchTerm) {
+                    const node = findNodeByEmployeeNo(treeData, searchTerm);
+                    if (node) {
+                        expandToNode(node);
+                        setTimeout(() => {
+                            highlightNode(node);
+                            focusNode(node); // 這行新增，用於滾動到節點
+                        }, 100);
+                    } else {
+                        alert("EmployeeNo not found");
+                    }
+                }
+            }
+
+            function clearHighlights() {
+                document
+                    .querySelectorAll(".highlighted")
+                    .forEach((el) => el.classList.remove("highlighted"));
+            }
+
+            function findNodeByOrgCode(node, orgCode) {
+                if (node.id === orgCode) return node;
+                for (let child of node.children) {
+                    const found = findNodeByOrgCode(child, orgCode);
+                    if (found) return found;
+                }
+                return null;
+            }
+
+            function findNodeByEmployeeNo(node, employeeNo) {
+                if (node.data.employeeInfoList) {
+                    for (let employee of node.data.employeeInfoList) {
+                        if (employee.EmployeeNo === employeeNo) return node;
+                    }
+                }
+                for (let child of node.children) {
+                    const found = findNodeByEmployeeNo(child, employeeNo);
+                    if (found) return found;
+                }
+                return null;
+            }
+
+            function highlightNode(node) {
+                const element = document.getElementById(`node-${node.id}`);
+                if (element) {
+                    element.classList.add("highlighted");
+                }
+            }
+
+            function focusNode(node) {
+                const element = document.getElementById(`node-${node.id}`);
+                if (element) {
+                    // 獲取樹狀結構的容器
+                    const container = document.getElementById("tree-container");
+
+                    // 確定目標元素在容器內的相對位置
+                    const containerRect = container.getBoundingClientRect();
+                    const elementRect = element.getBoundingClientRect();
+
+                    // 計算元素應滾動到的位置
+                    const offsetTop =
+                        elementRect.top -
+                        containerRect.top +
+                        container.scrollTop;
+
+                    // 使用滾動行為平滑滾動
+                    container.scrollTo({
+                        top: offsetTop - container.clientHeight / 2, // 調整為容器高度的一半，使元素居中
+                        behavior: "smooth",
+                    });
+                }
+            }
+
+            function expandToNode(node) {
+                let current = node;
+                let path = [];
+                while (current && current.id !== treeData.id) {
+                    path.unshift(current);
+                    current = findParent(treeData, current.id);
+                }
+                path.unshift(treeData);
+
+                for (let i = 0; i < path.length; i++) {
+                    const nodeElement = document.getElementById(
+                        `node-${path[i].id}`
+                    );
+                    if (nodeElement) {
+                        const childrenContainer =
+                            nodeElement.nextElementSibling;
+                        if (
+                            childrenContainer &&
+                            childrenContainer.classList.contains("children") &&
+                            childrenContainer.style.display === "none"
+                        ) {
+                            toggleNode(
+                                nodeElement,
+                                childrenContainer,
+                                nodeElement.querySelector(".node-icon")
+                            );
+                        }
+                    }
+                }
+            }
+
+            function findParent(node, childId) {
+                if (!node || !node.children) return null;
+                for (let child of node.children) {
+                    if (child.id === childId) return node;
+                    const found = findParent(child, childId);
+                    if (found) return found;
+                }
+                return null;
+            }
+
+            function fetchAndRenderTree() {
+                const apiUrl = document.getElementById("api-url").value;
+                fetch(apiUrl, {
+                    method: "GET",
+                    mode: "cors",
+                    credentials: "include",
+                    headers: {
+                        Accept: "application/json",
+                    },
+                })
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error(
+                                `HTTP error! status: ${response.status}`
+                            );
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        if (!data || data.length === 0) {
+                            throw new Error("No data received from API");
+                        }
+                        console.log("Data fetched successfully");
+                        treeData = createTreeStructure(data);
+                        if (treeData) {
+                            renderTree(
+                                treeData,
+                                document.getElementById("tree-container")
+                            );
+                        } else {
+                            throw new Error("Failed to create tree structure");
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error:", error);
+                        alert("Error loading the data: " + error.message);
+                    });
+            }
+
+            function exportToExcel() {
+  if (!treeData) {
+    alert("請先載入組織樹數據");
+    return;
+  }
+
+  // 將樹狀結構轉換為扁平數組
+  const flatData = flattenTree(treeData);
+
+  // 創建工作表
+  const ws = XLSX.utils.json_to_sheet(flatData);
+
+  // 創建工作簿
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "組織樹");
+
+  // 生成 Excel 文件並下載
+  XLSX.writeFile(wb, "organization_tree.xlsx");
+}
+
+            function flattenTree(
+                node,
+                parentOrgCode = "",
+                level = 1,
+                result = []
             ) {
-              toggleNode(
-                nodeElement,
-                childrenContainer,
-                nodeElement.querySelector(".node-icon")
-              );
-            }
-          }
-        }
-      }
+                const employees = node.data.employeeInfoList || [];
+                const employeeCount = employees.filter(
+                    (e) => e.EmployedStatus === "1"
+                ).length;
 
-      function findParent(node, childId) {
-        if (!node || !node.children) return null;
-        for (let child of node.children) {
-          if (child.id === childId) return node;
-          const found = findParent(child, childId);
-          if (found) return found;
-        }
-        return null;
-      }
+                result.push({
+                    層級: level,
+                    組織代碼: node.id,
+                    組織名稱: node.data.orgName,
+                    父組織代碼: parentOrgCode,
+                    子組織數: node.children.length,
+                    在職員工數: employeeCount,
+                });
 
-      function fetchAndRenderTree() {
-        const apiUrl = document.getElementById("api-url").value;
-        fetch(apiUrl, {
-          method: "GET",
-          mode: "cors",
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-          },
-        })
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-          })
-          .then((data) => {
-            if (!data || data.length === 0) {
-              throw new Error("No data received from API");
-            }
-            console.log("Data fetched successfully");
-            treeData = createTreeStructure(data);
-            if (treeData) {
-              renderTree(treeData, document.getElementById("tree-container"));
-            } else {
-              throw new Error("Failed to create tree structure");
-            }
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-            alert("Error loading the data: " + error.message);
-          });
-      }
+                // 添加員工信息
+                employees.forEach((employee) => {
+                    if (employee.EmployedStatus === "1") {
+                        result.push({
+                            層級: level + 1,
+                            組織代碼: node.id,
+                            員工編號: employee.EmployeeNo,
+                            員工姓名: employee.FullName,
+                            職稱: employee.JobTitleName,
+                        });
+                    }
+                });
 
-      // Initial load
-      fetchAndRenderTree();
-    </script>
-  </body>
+                // 遍歷子節點
+                node.children.forEach((child) => {
+                    flattenTree(child, node.id, level + 1, result);
+                });
+
+                return result;
+            }
+
+            // Initial load
+            fetchAndRenderTree();
+        </script>
+    </body>
 </html>
