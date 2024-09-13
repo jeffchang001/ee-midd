@@ -24,13 +24,13 @@ public class SecurityConfig {
             .csrf().disable()
             .authorizeRequests()
                 .antMatchers("/api/v1/**").authenticated() // 只有 /v1/api/** 路徑需要認證
-                .anyRequest().permitAll() // 其他所有请求都允许公开访问
+                .anyRequest().permitAll() // 其他請求都公開
             .and()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // 禁用表单登录和HTTP Basic认证
+        // 禁止使用表單登入和 http basic 認證
         http.formLogin().disable();
         http.httpBasic().disable();
 

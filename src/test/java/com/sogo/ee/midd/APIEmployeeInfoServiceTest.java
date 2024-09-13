@@ -3,8 +3,12 @@ package com.sogo.ee.midd;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
@@ -44,7 +48,7 @@ public class APIEmployeeInfoServiceTest {
          InputStream jsonStream = getClass().getClassLoader().getResourceAsStream(jsonFileName);
          assertNotNull(jsonStream, "Test JSON file not found: " + jsonFileName);
  
-         String jsonContent = new String(jsonStream.readAllBytes());
+         String jsonContent = readInputStream(jsonStream);
          ResponseEntity<String> mockResponse = new ResponseEntity<>(jsonContent, HttpStatus.OK);
  
          // 記錄初始數量
@@ -70,7 +74,7 @@ public class APIEmployeeInfoServiceTest {
         InputStream jsonStream = getClass().getClassLoader().getResourceAsStream(jsonFileName);
         assertNotNull(jsonStream, "Test JSON file not found: " + jsonFileName);
         
-        String jsonContent = new String(jsonStream.readAllBytes());
+        String jsonContent = readInputStream(jsonStream);
         ResponseEntity<String> mockResponse = new ResponseEntity<>(jsonContent, HttpStatus.OK);
 
         // 執行被測試的方法
@@ -88,5 +92,11 @@ public class APIEmployeeInfoServiceTest {
         List<APIEmployeeInfo> savedEmployees = employeeInfoRepo.findAll();
         assertFalse(savedEmployees.isEmpty(), "Saved employees list should not be empty");
 
+    }
+
+    private String readInputStream(InputStream inputStream) throws IOException {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
+            return br.lines().collect(Collectors.joining(System.lineSeparator()));
+        }
     }
 }
