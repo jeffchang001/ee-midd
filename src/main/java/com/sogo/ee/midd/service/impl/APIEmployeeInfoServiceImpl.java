@@ -135,30 +135,30 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 			LocalDate createdDate = info.getDataCreatedDate().toLocalDate();
 			LocalDate modifiedDate = info.getDataModifiedDate().toLocalDate();
 
-			
-			logger.info("employeeno============"+info.getEmployeeNo());
-			logger.info("today============"+today);
-			logger.info("createdDate============"+createdDate);
-			logger.info("modifiedDate============"+modifiedDate);
-			logger.info("createdDate.isBefore(today)============"+createdDate.isBefore(today));
-			logger.info("createdDate.equals(today)============"+createdDate.equals(today));
-			logger.info("modifiedDate.equals(today)============"+modifiedDate.equals(today));
-			logger.info("employedStatus============"+info.getEmployedStatus());
-			
+			logger.info("employeeno============" + info.getEmployeeNo());
+			logger.info("today============" + today);
+			logger.info("createdDate============" + createdDate);
+			logger.info("modifiedDate============" + modifiedDate);
+			logger.info("createdDate.isBefore(today)============" + createdDate.isBefore(today));
+			logger.info("createdDate.equals(today)============" + createdDate.equals(today));
+			logger.info("modifiedDate.equals(today)============" + modifiedDate.equals(today));
+			logger.info("employedStatus============" + info.getEmployedStatus());
 
 			// TODO: 這個比較方式, 由於每30分鐘會執行一次, 因此現在的判斷方式不夠完善, 但為了先處理後續開發, 待改善
 			if (today.equals(createdDate) && today.equals(modifiedDate) && "1".equals(info.getEmployedStatus())) {
 				logger.info("ccc");
 				info.setStatus("C");
-			} else if ((createdDate.isBefore(today) || createdDate.equals(today)) && modifiedDate.equals(today) && "1".equals(info.getEmployedStatus())) {
+			} else if ((createdDate.isBefore(today) || createdDate.equals(today)) && modifiedDate.equals(today)
+					&& "1".equals(info.getEmployedStatus())) {
 				info.setStatus("U");
 				logger.info("uuu");
-			} else if ((createdDate.isBefore(today) || createdDate.equals(today)) && modifiedDate.equals(today) && !"1".equals(info.getEmployedStatus())) {
+			} else if ((createdDate.isBefore(today) || createdDate.equals(today)) && modifiedDate.equals(today)
+					&& !"1".equals(info.getEmployedStatus())) {
 				info.setStatus("D");
 				logger.info("ddd");
 			}
-			
-			logger.info("info.getStatus()============"+info.getStatus());
+
+			logger.info("info.getStatus()============" + info.getStatus());
 			employeeInfoRepo.save(info);
 		}
 	}
@@ -175,7 +175,8 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 		// 處理可能需要新增的資料
 		for (APIEmployeeInfo apiEmployeeInfo : createAPIEmployeeInfoList) {
 			tmpEmployInfoArchived = archivedRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
-			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndIsSync(apiEmployeeInfo.getEmployeeNo(), "C", Boolean.FALSE);
+			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndIsSync(apiEmployeeInfo.getEmployeeNo(), "C",
+					Boolean.FALSE);
 			if (tmpEmployInfoArchived == null && tmpActionLogList.isEmpty()) {
 				// employeeInfo.status=C, 確認 archived 中沒有資料, 代表需要新增 actionLog
 				tmpActionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "C", "employee_no", null,
@@ -190,7 +191,8 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 		// 處理可能需要更新的資料
 		for (APIEmployeeInfo apiEmployeeInfo : updateAPIEmployeeInfoList) {
 			tmpEmployInfoArchived = archivedRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
-			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndIsSync(apiEmployeeInfo.getEmployeeNo(), "U", Boolean.FALSE);
+			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndIsSync(apiEmployeeInfo.getEmployeeNo(), "U",
+					Boolean.FALSE);
 			if (tmpEmployInfoArchived != null && tmpActionLogList.isEmpty()) {
 				tmpActionLogList = new ArrayList<APIEmployeeInfoActionLog>();
 				// Action 確認為更新資料, 存入 actionLog
@@ -203,16 +205,18 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 			}
 		}
 
-		// 處理可能需要刪除的資料
+		// 處理可能需要刪除或停用的資料
+		// TODO: 應該移除 D 的狀態, 需要都透過 U 的狀態, 去看 employeeStatus=2, 3 的時候, 增加停用的狀態即可
 		for (APIEmployeeInfo apiEmployeeInfo : deleteAPIEmployeeInfoList) {
 			// 代表第一次判斷 employeeInfo=D, 但在 emploeeInfoArchived 中已經有資料了
 			tmpEmployInfoArchived = archivedRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
 			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndIsSync(apiEmployeeInfo.getEmployeeNo(), "D",
 					Boolean.FALSE);
 			if (tmpEmployInfoArchived != null && tmpActionLogList.size() == 0) {
-				// Action 確認為刪除資料, 存入 actionLog
-				tmpActionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "D", "employee_no", null,
-						null);
+				// Action 確認為刪除資料, 存入 actionLog, 紀錄 employee status, 2=留停, 3=離職
+				tmpActionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "D", "employee_no",
+						"EmployedStatus",
+						apiEmployeeInfo.getEmployedStatus());
 				actionLogRepo.save(tmpActionLog);
 			} else {
 				// do nothing
