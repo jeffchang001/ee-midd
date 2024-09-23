@@ -9,8 +9,6 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -26,10 +24,11 @@ import com.sogo.ee.midd.repository.APIEmployeeInfoArchivedRepository;
 import com.sogo.ee.midd.repository.APIEmployeeInfoRepository;
 import com.sogo.ee.midd.service.APIEmployeeInfoService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
-
-	private static final Logger logger = LoggerFactory.getLogger(APIEmployeeInfoServiceImpl.class);
 
 	@Autowired
 	private APIEmployeeInfoRepository employeeInfoRepo;
@@ -44,7 +43,7 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 	public void processEmployeeInfo(ResponseEntity<String> response) throws Exception {
 		// TODO: 需要有初始化的資料庫, 避免系統異常
 
-		logger.info("Starting processEmployeeInfo");
+		log.info("Starting processEmployeeInfo");
 
 		try {
 			// 解析 JSON
@@ -54,40 +53,40 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 					APIEmployeeInfoDto.class);
 
 			List<APIEmployeeInfo> newEmployeeInfoList = apiEmployeeInfoResponse.getResult();
-			logger.info("Parsed employee list size: "
+			log.info("Parsed employee list size: "
 					+ (newEmployeeInfoList != null ? newEmployeeInfoList.size() : "null"));
 
 			if (newEmployeeInfoList != null && !newEmployeeInfoList.isEmpty()) {
 				// 步驟 1：將當前數據存檔
 				List<APIEmployeeInfoArchived> archivedList = archiveCurrentData();
-				logger.info("Archived list size: " + archivedList.size());
+				log.info("Archived list size: " + archivedList.size());
 
 				// 步驟 2：清空當前表格並插入新數據
 				employeeInfoRepo.truncateTable();
-				logger.info("employeeInfoRepo Table truncated");
+				log.info("employeeInfoRepo Table truncated");
 
 				updateStatusForNewData(newEmployeeInfoList);
-				logger.info("Status updated for new data");
+				log.info("Status updated for new data");
 
 				List<APIEmployeeInfo> savedList = employeeInfoRepo.saveAll(newEmployeeInfoList);
-				logger.info("Saved new employee list size: " + savedList.size());
+				log.info("Saved new employee list size: " + savedList.size());
 
 				// 驗證保存
 				List<APIEmployeeInfo> verifiedList = employeeInfoRepo.findAll();
-				logger.info("Verified saved employee list size: " + verifiedList.size());
+				log.info("Verified saved employee list size: " + verifiedList.size());
 
 				// // 生成操作日誌
 				generateActionLogs();
 
 			} else {
-				logger.warn("No new employee data to process");
+				log.warn("No new employee data to process");
 			}
 		} catch (Exception e) {
-			logger.error("Error in processEmployeeInfo", e);
-			throw e; // 重新拋出異常，確保事務回滾
+			log.error("Error in processEmployeeInfo", e);
+			throw e; // 重新拋出異常，確保事務 roll back
 		}
 
-		logger.info("Completed processEmployeeInfo");
+		log.info("Completed processEmployeeInfo");
 
 	}
 
@@ -99,13 +98,13 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 
 		List<APIEmployeeInfoArchived> theAPIEmployeeInfoArchived = archivedRepo.findAll();
 
-		logger.debug("currentEmployeeInfoList===" + currentEmployeeInfoList.size());
-		logger.debug("archivedList===" + archivedList.size());
-		logger.debug("theAPIEmployeeInfoArchived===" + theAPIEmployeeInfoArchived.size());
+		log.debug("currentEmployeeInfoList===" + currentEmployeeInfoList.size());
+		log.debug("archivedList===" + archivedList.size());
+		log.debug("theAPIEmployeeInfoArchived===" + theAPIEmployeeInfoArchived.size());
 		// 若 archived 有資料, 要先清除
 		if (theAPIEmployeeInfoArchived.size() > 0) {
 			archivedRepo.truncateTable();
-			logger.info("Archived table truncated");
+			log.info("Archived table truncated");
 		}
 
 		return archivedRepo.saveAll(archivedList);
@@ -135,30 +134,30 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 			LocalDate createdDate = info.getDataCreatedDate().toLocalDate();
 			LocalDate modifiedDate = info.getDataModifiedDate().toLocalDate();
 
-			logger.info("employeeno============" + info.getEmployeeNo());
-			logger.info("today============" + today);
-			logger.info("createdDate============" + createdDate);
-			logger.info("modifiedDate============" + modifiedDate);
-			logger.info("createdDate.isBefore(today)============" + createdDate.isBefore(today));
-			logger.info("createdDate.equals(today)============" + createdDate.equals(today));
-			logger.info("modifiedDate.equals(today)============" + modifiedDate.equals(today));
-			logger.info("employedStatus============" + info.getEmployedStatus());
+			log.info("employeeno============" + info.getEmployeeNo());
+			log.info("today============" + today);
+			log.info("createdDate============" + createdDate);
+			log.info("modifiedDate============" + modifiedDate);
+			log.info("createdDate.isBefore(today)============" + createdDate.isBefore(today));
+			log.info("createdDate.equals(today)============" + createdDate.equals(today));
+			log.info("modifiedDate.equals(today)============" + modifiedDate.equals(today));
+			log.info("employedStatus============" + info.getEmployedStatus());
 
 			// TODO: 這個比較方式, 由於每30分鐘會執行一次, 因此現在的判斷方式不夠完善, 但為了先處理後續開發, 待改善
 			if (today.equals(createdDate) && today.equals(modifiedDate) && "1".equals(info.getEmployedStatus())) {
-				logger.info("ccc");
+				log.info("ccc");
 				info.setStatus("C");
 			} else if ((createdDate.isBefore(today) || createdDate.equals(today)) && modifiedDate.equals(today)
 					&& "1".equals(info.getEmployedStatus())) {
 				info.setStatus("U");
-				logger.info("uuu");
+				log.info("uuu");
 			} else if ((createdDate.isBefore(today) || createdDate.equals(today)) && modifiedDate.equals(today)
 					&& !"1".equals(info.getEmployedStatus())) {
 				info.setStatus("D");
-				logger.info("ddd");
+				log.info("ddd");
 			}
 
-			logger.info("info.getStatus()============" + info.getStatus());
+			log.info("info.getStatus()============" + info.getStatus());
 			employeeInfoRepo.save(info);
 		}
 	}
@@ -260,7 +259,7 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 					oldField.setAccessible(true);
 				} catch (NoSuchFieldException e) {
 					// 如果欄位不存在，我們會跳過這個欄位的比較
-					logger.warn("Field {} not found in APIEmployeeInfoArchived", field.getName());
+					log.warn("Field {} not found in APIEmployeeInfoArchived", field.getName());
 					continue;
 				}
 
@@ -275,7 +274,7 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 							newValue != null ? newValue.toString() : null));
 				}
 			} catch (IllegalAccessException e) {
-				logger.error("Error accessing field: " + field.getName(), e);
+				log.error("Error accessing field: " + field.getName(), e);
 			}
 		}
 	}
@@ -300,6 +299,5 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 		// 複製並儲存 employeeInfoArchived 資料
 		archivedRepo.truncateTable();
 		archivedRepo.saveAll(archivedList);
-
 	}
 }

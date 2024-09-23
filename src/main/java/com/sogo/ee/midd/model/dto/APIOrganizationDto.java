@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.sogo.ee.midd.model.entity.APIEmployeeInfo;
+import com.sogo.ee.midd.model.entity.APIOrganization;
 
 import lombok.Data;
 
 @Data
-public class APIEmployeeInfoDto {
+public class APIOrganizationDto {
     @JsonProperty("HttpStatusCode")
     private int httpStatusCode;
 
@@ -17,7 +17,7 @@ public class APIEmployeeInfoDto {
     private String errorCode;
 
     @JsonProperty("Result")
-    private List<APIEmployeeInfo> result;
+    private List<APIOrganization> result;
 
     @JsonProperty("ExtraData")
     private Map<String, String> ExtraData;

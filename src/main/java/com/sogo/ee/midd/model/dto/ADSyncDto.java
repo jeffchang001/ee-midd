@@ -5,11 +5,9 @@ import java.util.Map;
 
 import com.sogo.ee.midd.model.entity.APIEmployeeInfo;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class ADSyncDto {
 
     private String employeeNo;

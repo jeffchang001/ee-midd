@@ -19,8 +19,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "api_organization_relation") // 假設您的數據庫表名稱為 api_organization_relation
-public class APIOrganizationRelation {
+@Table(name = "api_company")
+public class APICompany {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,13 +29,25 @@ public class APIOrganizationRelation {
     @Column(name = "CompanyCode")
     private String companyCode;
 
-    @JsonProperty("CompanyPartyID")
-    @Column(name = "CompanyPartyId")
-    private Long companyPartyId;
+    @JsonProperty("CompanyName")
+    @Column(name = "CompanyName")
+    private String companyName;
+
+    @JsonProperty("EffectiveDate")
+    @Column(name = "EffectiveDate")
+    private LocalDateTime effectiveDate;
 
     @JsonProperty("CreatedDate")
     @Column(name = "CreatedDate")
     private LocalDateTime createdDate;
+
+    @JsonProperty("CompanyPartyID")
+    @Column(name = "CompanyPartyID")
+    private Long companyPartyID;
+
+    @JsonProperty("TenantID")
+    @Column(name = "TenantID")
+    private String tenantID;
 
     @JsonProperty("DataCreatedDate")
     @Column(name = "DataCreatedDate")
@@ -52,30 +64,6 @@ public class APIOrganizationRelation {
     @JsonProperty("DataModifiedUser")
     @Column(name = "DataModifiedUser")
     private String dataModifiedUser;
-
-    @JsonProperty("OrgCode")
-    @Column(name = "OrgCode")
-    private String orgCode;
-
-    @JsonProperty("OrgName")
-    @Column(name = "OrgName")
-    private String orgName;
-
-    @JsonProperty("OrgTreeType")
-    @Column(name = "OrgTreeType")
-    private String orgTreeType;
-
-    @JsonProperty("OrganizationRelationID")
-    @Column(name = "OrganizationRelationId")
-    private Long organizationRelationId;
-
-    @JsonProperty("ParentOrgCode")
-    @Column(name = "ParentOrgCode")
-    private String parentOrgCode;
-
-    @JsonProperty("TenantID")
-    @Column(name = "TenantId")
-    private String tenantId;
 
     @Column(name = "Status")
     private String status;

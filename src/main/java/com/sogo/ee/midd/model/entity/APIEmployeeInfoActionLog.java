@@ -10,12 +10,10 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -53,8 +51,8 @@ public class APIEmployeeInfoActionLog {
     @Column(name = "IsSync")
     private Boolean isSync = Boolean.FALSE;
 
-    public APIEmployeeInfoActionLog(String employeeNo, String action, String fieldName, 
-                                    String oldValue, String newValue) {
+    public APIEmployeeInfoActionLog(String employeeNo, String action, String fieldName,
+            String oldValue, String newValue) {
         this.employeeNo = employeeNo;
         this.action = action;
         this.fieldName = fieldName;

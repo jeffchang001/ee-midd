@@ -19,23 +19,60 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "api_organization_relation") // 假設您的數據庫表名稱為 api_organization_relation
-public class APIOrganizationRelation {
+@Table(name = "api_organization_manager")
+public class APIOrganizationManager {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @JsonProperty("OrganizationManagerID")
+    @Column(name = "OrganizationManagerID")
+    private Long organizationManagerID;
 
     @JsonProperty("CompanyCode")
     @Column(name = "CompanyCode")
     private String companyCode;
 
-    @JsonProperty("CompanyPartyID")
-    @Column(name = "CompanyPartyId")
-    private Long companyPartyId;
+    @JsonProperty("OrgCode")
+    @Column(name = "OrgCode")
+    private String orgCode;
+
+    @JsonProperty("EmployeeNo")
+    @Column(name = "EmployeeNo")
+    private String employeeNo;
+
+    @JsonProperty("FullName")
+    @Column(name = "FullName")
+    private String fullName;
+
+    @JsonProperty("ManagerRoleType")
+    @Column(name = "ManagerRoleType")
+    private String managerRoleType;
+
+    @JsonProperty("EffectiveDate")
+    @Column(name = "EffectiveDate")
+    private LocalDateTime effectiveDate;
+
+    @JsonProperty("EndDate")
+    @Column(name = "EndDate")
+    private LocalDateTime endDate;
+
+    @JsonProperty("IsDeputy")
+    @Column(name = "IsDeputy")
+    private Boolean isDeputy;
 
     @JsonProperty("CreatedDate")
     @Column(name = "CreatedDate")
     private LocalDateTime createdDate;
+
+    @JsonProperty("CompanyPartyID")
+    @Column(name = "CompanyPartyID")
+    private Long companyPartyID;
+
+    @JsonProperty("TenantID")
+    @Column(name = "TenantID")
+    private String tenantID;
 
     @JsonProperty("DataCreatedDate")
     @Column(name = "DataCreatedDate")
@@ -53,30 +90,7 @@ public class APIOrganizationRelation {
     @Column(name = "DataModifiedUser")
     private String dataModifiedUser;
 
-    @JsonProperty("OrgCode")
-    @Column(name = "OrgCode")
-    private String orgCode;
-
-    @JsonProperty("OrgName")
-    @Column(name = "OrgName")
-    private String orgName;
-
-    @JsonProperty("OrgTreeType")
-    @Column(name = "OrgTreeType")
-    private String orgTreeType;
-
-    @JsonProperty("OrganizationRelationID")
-    @Column(name = "OrganizationRelationId")
-    private Long organizationRelationId;
-
-    @JsonProperty("ParentOrgCode")
-    @Column(name = "ParentOrgCode")
-    private String parentOrgCode;
-
-    @JsonProperty("TenantID")
-    @Column(name = "TenantId")
-    private String tenantId;
-
     @Column(name = "Status")
     private String status;
+
 }

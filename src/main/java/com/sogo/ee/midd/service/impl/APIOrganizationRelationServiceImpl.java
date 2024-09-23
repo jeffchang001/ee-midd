@@ -5,8 +5,6 @@ import java.util.List;
 
 import javax.transaction.Transactional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -20,10 +18,11 @@ import com.sogo.ee.midd.repository.APIEmployeeInfoRepository;
 import com.sogo.ee.midd.repository.APIOrganizationRelationRepository;
 import com.sogo.ee.midd.service.APIOrganizationRelationService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class APIOrganizationRelationServiceImpl implements APIOrganizationRelationService {
-
-    private static final Logger logger = LoggerFactory.getLogger(APIOrganizationRelationServiceImpl.class);
 
     @Autowired
     private APIOrganizationRelationRepository organizationRelationRepo;
@@ -35,7 +34,7 @@ public class APIOrganizationRelationServiceImpl implements APIOrganizationRelati
     @Override
     @Transactional
     public void processOrganizationRelation(ResponseEntity<String> response) throws Exception {
-        logger.info("Starting processOrganizationRelation");
+        log.info("Starting processOrganizationRelation");
 
         try {
             // 解析 JSON
@@ -45,7 +44,7 @@ public class APIOrganizationRelationServiceImpl implements APIOrganizationRelati
                     APIOrganizationRelationDto.class);
 
             List<APIOrganizationRelation> apiOrganizationRelationList = apiOrganizationRelationResponse.getResult();
-            logger.info("Parsed OrganizationRelation list size: "
+            log.info("Parsed OrganizationRelation list size: "
                     + (apiOrganizationRelationList != null ? apiOrganizationRelationList.size() : "null"));
             
             organizationRelationRepo.truncateTable();
@@ -53,11 +52,11 @@ public class APIOrganizationRelationServiceImpl implements APIOrganizationRelati
             organizationRelationRepo.saveAll(apiOrganizationRelationList);
 
         } catch (Exception e) {
-            logger.error("Error in processOrganizationRelation", e);
+            log.error("Error in processOrganizationRelation", e);
             throw e; // 重新拋出異常，確保事務 roll back
         }
 
-        logger.info("Completed processOrganizationRelation");
+        log.info("Completed processOrganizationRelation");
     }
 
     @Override

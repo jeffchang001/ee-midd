@@ -13,5 +13,4 @@ public class WholeOrgTreeDto {
     private String parentOrgCode;
     private int orgLevel;
     private List<APIEmployeeInfo> employeeInfoList;
-
 }

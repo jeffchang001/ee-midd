@@ -12,12 +12,10 @@ import javax.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -235,7 +233,7 @@ public class APIEmployeeInfo {
     @JsonProperty("FunctionOrgCode")
     @Column(name = "FunctionOrgCode")
     private String functionOrgCode;
-    
+
     @JsonProperty("FunctionOrgName")
     @Column(name = "FunctionOrgName")
     private String functionOrgName;
@@ -243,7 +241,7 @@ public class APIEmployeeInfo {
     @JsonProperty("MVPN")
     @Column(name = "MVPN")
     private String mvpn;
-    
+
     @Column(name = "Status")
     private String status;
 
