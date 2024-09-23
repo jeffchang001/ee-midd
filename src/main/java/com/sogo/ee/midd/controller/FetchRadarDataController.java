@@ -59,11 +59,13 @@ public class FetchRadarDataController {
 
 	@PostMapping("/organization/sync")
 	public ResponseEntity<String> syncOrganization(
-			@RequestParam(name = "org-codes", defaultValue = "") String orgCodes) {
+			@RequestParam(name = "org-codes", defaultValue = "") String orgCodes,
+			@RequestParam(name = "base-date", defaultValue = "") String baseDate) {
 		try {
 			String apiUrl = radarAPIServerURI + "/api/ZZApi/ZZOrganization";
 			Map<String, String> params = new HashMap<>();
 			params.put("orgCodes", orgCodes);
+			params.put("baseDate", baseDate);
 			ResponseEntity<String> response = fetchFromRadarAPI(apiUrl, params);
 			apiOrganizationService.processOrganization(response);
 			return ResponseEntity.ok("組織資訊同步成功");
@@ -76,11 +78,13 @@ public class FetchRadarDataController {
 
 	@PostMapping("/organization-manager/sync")
 	public ResponseEntity<String> syncOrganizationManager(
-			@RequestParam(name = "org-codes", defaultValue = "") String orgCodes) {
+			@RequestParam(name = "org-codes", defaultValue = "") String orgCodes,
+			@RequestParam(name = "base-date", defaultValue = "") String baseDate) {
 		try {
 			String apiUrl = radarAPIServerURI + "/api/ZZApi/ZZOrganizationManager";
 			Map<String, String> params = new HashMap<>();
 			params.put("orgCodes", orgCodes);
+			params.put("baseDate", baseDate);
 			ResponseEntity<String> response = fetchFromRadarAPI(apiUrl, params);
 			apiOrganizationManagerService.processOrganizationManager(response);
 			return ResponseEntity.ok("單位主管同步成功");
@@ -143,8 +147,8 @@ public class FetchRadarDataController {
 	public ResponseEntity<String> initDatabase() {
 		try {
 			syncCompany();
-			syncOrganization("");
-			syncOrganizationManager("");
+			syncOrganization("", "");
+			syncOrganizationManager("", "");
 			syncOrganizationRelation("");
 			syncEmployeeInfo("", "");
 			return ResponseEntity.ok("資料庫初始化成功");
