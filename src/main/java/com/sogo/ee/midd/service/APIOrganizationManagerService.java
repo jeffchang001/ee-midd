@@ -8,4 +8,6 @@ public interface APIOrganizationManagerService {
 
     public void processOrganizationManager(ResponseEntity<String> response) throws Exception;
 
+    public boolean existsByEmployeeNoAndOrgCode(String employeeNo, String orgCode);
+
 }

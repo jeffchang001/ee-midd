@@ -1,6 +1,7 @@
 package com.sogo.ee.midd.controller;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -8,6 +9,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.sogo.ee.midd.exception.RadarAPIException;
+import com.sogo.ee.midd.model.dto.WholeOrgTreeDto;
 import com.sogo.ee.midd.service.APICompanyService;
 import com.sogo.ee.midd.service.APIEmployeeInfoService;
 import com.sogo.ee.midd.service.APIOrganizationManagerService;
@@ -59,12 +62,12 @@ public class FetchRadarDataController {
 
 	@PostMapping("/organization/sync")
 	public ResponseEntity<String> syncOrganization(
-			@RequestParam(name = "org-codes", defaultValue = "") String orgCodes,
+			@RequestParam(name = "org-code", defaultValue = "") String orgCode,
 			@RequestParam(name = "base-date", defaultValue = "") String baseDate) {
 		try {
 			String apiUrl = radarAPIServerURI + "/api/ZZApi/ZZOrganization";
 			Map<String, String> params = new HashMap<>();
-			params.put("orgCodes", orgCodes);
+			params.put("orgCodes", orgCode);
 			params.put("baseDate", baseDate);
 			ResponseEntity<String> response = fetchFromRadarAPI(apiUrl, params);
 			apiOrganizationService.processOrganization(response);
@@ -78,12 +81,12 @@ public class FetchRadarDataController {
 
 	@PostMapping("/organization-manager/sync")
 	public ResponseEntity<String> syncOrganizationManager(
-			@RequestParam(name = "org-codes", defaultValue = "") String orgCodes,
+			@RequestParam(name = "org-code", defaultValue = "") String orgCode,
 			@RequestParam(name = "base-date", defaultValue = "") String baseDate) {
 		try {
 			String apiUrl = radarAPIServerURI + "/api/ZZApi/ZZOrganizationManager";
 			Map<String, String> params = new HashMap<>();
-			params.put("orgCodes", orgCodes);
+			params.put("orgCodes", orgCode);
 			params.put("baseDate", baseDate);
 			ResponseEntity<String> response = fetchFromRadarAPI(apiUrl, params);
 			apiOrganizationManagerService.processOrganizationManager(response);
@@ -131,17 +134,28 @@ public class FetchRadarDataController {
 		}
 	}
 
-	// @GetMapping("/organization-relations")
-	// public ResponseEntity<?> OrganizationRelations(
-	// 		@RequestParam(name = "tree-type", defaultValue = "") String treeType) {
-	// 	try {
-	// 		List<WholeOrgTreeDto> orgRelations = apiOrganizationRelationService
-	// 				.fetchOrganizationRelationByorgTreeType(treeType);
-	// 		return ResponseEntity.ok(orgRelations);
-	// 	} catch (Exception e) {
-	// 		return ResponseEntity.internalServerError().body("獲取組織關係時發生錯誤: " + e.getMessage());
-	// 	}
-	// }
+	@GetMapping("/organization-relations")
+	public ResponseEntity<?> organizationRelations(
+			@RequestParam(name = "tree-type", defaultValue = "") String treeType) {
+		try {
+			List<WholeOrgTreeDto> orgRelations = apiOrganizationRelationService
+					.fetchOrganizationRelationByorgTreeType(treeType);
+			return ResponseEntity.ok(orgRelations);
+		} catch (Exception e) {
+			return ResponseEntity.internalServerError().body("獲取組織關係時發生錯誤: " + e.getMessage());
+		}
+	}
+
+	@GetMapping("/organization-manager/check")
+	public ResponseEntity<?> isOrgManager(
+			@RequestParam(name = "employee-no", defaultValue = "") String employeeNo,			
+			@RequestParam(name = "org-code", defaultValue = "") String orgCode) {
+		try {
+			return ResponseEntity.ok(apiOrganizationManagerService.existsByEmployeeNoAndOrgCode(employeeNo, orgCode));
+		} catch (Exception e) {
+			return ResponseEntity.internalServerError().body("獲取組織關係時發生錯誤: " + e.getMessage());
+		}
+	}
 
 	@PostMapping("/system/initialization")
 	public ResponseEntity<String> initDatabase() {

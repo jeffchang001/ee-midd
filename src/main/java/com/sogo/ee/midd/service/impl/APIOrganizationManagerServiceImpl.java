@@ -67,4 +67,10 @@ public class APIOrganizationManagerServiceImpl implements APIOrganizationManager
         log.info("Completed processOrganizationManager");
     }
 
+    public boolean existsByEmployeeNoAndOrgCode(String employeeNo, String orgCode) {
+
+        return orgManagerRepo.existsByEmployeeNoAndOrgCode(employeeNo, orgCode);
+
+    }
+
 }

@@ -265,14 +265,27 @@
                 ) {
                     const employeeListElement = document.createElement("ul");
                     employeeListElement.className = "employee-list";
+
                     node.data.employeeInfoList.forEach((employee) => {
                         if (employee.EmployedStatus === "1") {
                             const employeeElement =
                                 document.createElement("li");
-                            employeeElement.innerHTML = `<span class="node-icon user"></span>${employee.EmployeeNo} - ${employee.JobTitleName} - ${employee.FullName}`;
+                            const isManager = checkIfManager(
+                                employee.EmployeeNo,
+                                node.id
+                            );
+
+                            let managerIcon = "";
+                            if (isManager) {
+                                managerIcon =
+                                    '<span class="manager-icon" style="color: red; margin-left: 5px;">✓</span>';
+                            }
+
+                            employeeElement.innerHTML = `<span class="node-icon user">${managerIcon}</span>${employee.EmployeeNo} - ${employee.JobTitleName} - ${employee.FullName}`;
                             employeeListElement.appendChild(employeeElement);
                         }
                     });
+
                     if (employeeListElement.children.length > 0) {
                         nodeElement.appendChild(employeeListElement);
                     }
@@ -485,25 +498,46 @@
                     });
             }
 
+            function checkIfManager(employeeNo, orgCode) {
+                const apiUrl = `http://114.32.170.102:8080/ee-midd/organization-manager/check?employee-no=${employeeNo}&org-code=${orgCode}`;
+                let isManager = false;
+
+                const xhr = new XMLHttpRequest();
+                xhr.open("GET", apiUrl, false); // 使用同步請求
+                xhr.setRequestHeader("Accept", "application/json");
+                xhr.withCredentials = true;
+
+                try {
+                    xhr.send();
+                    if (xhr.status === 200) {
+                        isManager = JSON.parse(xhr.responseText);
+                    }
+                } catch (error) {
+                    console.error("Error checking manager status:", error);
+                }
+
+                return isManager;
+            }
+
             function exportToExcel() {
-  if (!treeData) {
-    alert("請先載入組織樹數據");
-    return;
-  }
+                if (!treeData) {
+                    alert("請先載入組織樹數據");
+                    return;
+                }
 
-  // 將樹狀結構轉換為扁平數組
-  const flatData = flattenTree(treeData);
+                // 將樹狀結構轉換為扁平數組
+                const flatData = flattenTree(treeData);
 
-  // 創建工作表
-  const ws = XLSX.utils.json_to_sheet(flatData);
+                // 創建工作表
+                const ws = XLSX.utils.json_to_sheet(flatData);
 
-  // 創建工作簿
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "組織樹");
+                // 創建工作簿
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "組織樹");
 
-  // 生成 Excel 文件並下載
-  XLSX.writeFile(wb, "organization_tree.xlsx");
-}
+                // 生成 Excel 文件並下載
+                XLSX.writeFile(wb, "organization_tree.xlsx");
+            }
 
             function flattenTree(
                 node,

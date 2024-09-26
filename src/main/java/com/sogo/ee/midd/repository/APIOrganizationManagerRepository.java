@@ -14,4 +14,6 @@ public interface APIOrganizationManagerRepository extends JpaRepository<APIOrgan
     @Query(value = "TRUNCATE TABLE api_organization_manager", nativeQuery = true)
     void truncateTable();
 
+    boolean existsByEmployeeNoAndOrgCode(String employeeNo, String orgCode);
+
 }

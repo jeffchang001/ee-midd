@@ -74,6 +74,10 @@ public class APIEmployeeInfo {
     @Column(name = "UserID")
     private String userID;
 
+    @JsonProperty("JobFlag")
+    @Column(name = "JobFlag")
+    private String jobFlag;
+
     @JsonProperty("JobGradeCode")
     @Column(name = "JobGradeCode")
     private String jobGradeCode;
