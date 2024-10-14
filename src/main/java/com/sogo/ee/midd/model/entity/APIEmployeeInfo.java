@@ -42,6 +42,10 @@ public class APIEmployeeInfo {
     @Column(name = "EmployeeNo")
     private String employeeNo;
 
+    @JsonProperty("IDNoSuffix")
+    @Column(name = "IDNoSuffix")
+    private String idNoSuffix;
+    
     @JsonProperty("IDNo")
     @Column(name = "IDNo")
     private String idNo;

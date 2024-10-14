@@ -12,7 +12,6 @@ import com.sogo.ee.midd.service.ADSyncService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,18 +26,16 @@ public class ADSyncController {
     private final ADSyncService adSyncService;
 
     @Operation(summary = "獲取 AD 同步數據", description = "此 API 端點返回所有 AD 同步數據的列表")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "成功檢索到 AD 同步數據"),
-            @ApiResponse(responseCode = "404", description = "未找到 AD 同步數據"),
-            @ApiResponse(responseCode = "500", description = "伺服器內部錯誤")
-    })
+    @ApiResponse(responseCode = "200", description = "成功檢索到 AD 同步數據")
+    @ApiResponse(responseCode = "204", description = "未找到 AD 同步數據")
+    @ApiResponse(responseCode = "500", description = "伺服器內部錯誤")
     @GetMapping("/ad-sync-data")
     public ResponseEntity<Object> getADSyncData() {
         try {
             List<ADSyncDto> adSyncData = adSyncService.getADSyncData();
             if (adSyncData.isEmpty()) {
                 log.info("未找到 AD 同步數據");
-                return ResponseEntity.notFound().build();
+                return ResponseEntity.noContent().build();
             }
             log.info("成功檢索到 AD 同步數據, 數量: {}", adSyncData.size());
             return ResponseEntity.ok(adSyncData);

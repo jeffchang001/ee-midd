@@ -1,10 +1,12 @@
 package com.sogo.ee.midd.controller;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -25,12 +27,17 @@ import com.sogo.ee.midd.service.APIOrganizationManagerService;
 import com.sogo.ee.midd.service.APIOrganizationRelationService;
 import com.sogo.ee.midd.service.APIOrganizationService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Radar Data Sync", description = "提供從 Radar API 同步數據的功能")
 public class FetchRadarDataController {
 
 	private final RestTemplate restTemplate;
@@ -46,7 +53,11 @@ public class FetchRadarDataController {
 	@Value("${radar.api.token}")
 	private String radarAPIToken;
 
-	@PostMapping("/company/sync")
+	@PostMapping("/companies/sync")
+	@Operation(summary = "同步公司資訊", description = "從 Radar API 同步公司資訊")
+	@ApiResponse(responseCode = "200", description = "公司資訊同步成功")
+	@ApiResponse(responseCode = "400", description = "公司資訊同步失敗")
+	@ApiResponse(responseCode = "500", description = "內部伺服器錯誤")
 	public ResponseEntity<String> syncCompany() {
 		try {
 			String apiUrl = radarAPIServerURI + "/api/Org/Company";
@@ -60,15 +71,19 @@ public class FetchRadarDataController {
 		}
 	}
 
-	@PostMapping("/organization/sync")
+	@PostMapping("/organizations/sync")
+	@Operation(summary = "同步組織資訊", description = "從 Radar API 同步組織資訊")
+	@ApiResponse(responseCode = "200", description = "組織資訊同步成功")
+	@ApiResponse(responseCode = "400", description = "組織資訊同步失敗")
+	@ApiResponse(responseCode = "500", description = "內部伺服器錯誤")
 	public ResponseEntity<String> syncOrganization(
-			@RequestParam(name = "org-code", defaultValue = "") String orgCode,
-			@RequestParam(name = "base-date", defaultValue = "") String baseDate) {
+			@Parameter(description = "組織代碼") @RequestParam(name = "org-code", defaultValue = "") String orgCode,
+			@Parameter(description = "基準日期") @RequestParam(name = "base-date", defaultValue = "") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
 		try {
 			String apiUrl = radarAPIServerURI + "/api/ZZApi/ZZOrganization";
 			Map<String, String> params = new HashMap<>();
 			params.put("orgCodes", orgCode);
-			params.put("baseDate", baseDate);
+			params.put("baseDate", baseDate != null ? baseDate.toString() : "");
 			ResponseEntity<String> response = fetchFromRadarAPI(apiUrl, params);
 			apiOrganizationService.processOrganization(response);
 			return ResponseEntity.ok("組織資訊同步成功");
@@ -79,28 +94,36 @@ public class FetchRadarDataController {
 		}
 	}
 
-	@PostMapping("/organization-manager/sync")
+	@PostMapping("/organization-managers/sync")
+	@Operation(summary = "同步組織管理者資訊", description = "從 Radar API 同步組織管理者資訊")
+	@ApiResponse(responseCode = "200", description = "組織管理者資訊同步成功")
+	@ApiResponse(responseCode = "400", description = "組織管理者資訊同步失敗")
+	@ApiResponse(responseCode = "500", description = "內部伺服器錯誤")
 	public ResponseEntity<String> syncOrganizationManager(
-			@RequestParam(name = "org-code", defaultValue = "") String orgCode,
-			@RequestParam(name = "base-date", defaultValue = "") String baseDate) {
+			@Parameter(description = "組織代碼") @RequestParam(name = "org-code", defaultValue = "") String orgCode,
+			@Parameter(description = "基準日期") @RequestParam(name = "base-date", defaultValue = "") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
 		try {
 			String apiUrl = radarAPIServerURI + "/api/ZZApi/ZZOrganizationManager";
 			Map<String, String> params = new HashMap<>();
 			params.put("orgCodes", orgCode);
-			params.put("baseDate", baseDate);
+			params.put("baseDate", baseDate != null ? baseDate.toString() : "");
 			ResponseEntity<String> response = fetchFromRadarAPI(apiUrl, params);
 			apiOrganizationManagerService.processOrganizationManager(response);
-			return ResponseEntity.ok("單位主管同步成功");
+			return ResponseEntity.ok("組織管理者資訊同步成功");
 		} catch (RadarAPIException e) {
-			return ResponseEntity.badRequest().body("單位主管同步失敗: " + e.getMessage());
+			return ResponseEntity.badRequest().body("組織管理者資訊同步失敗: " + e.getMessage());
 		} catch (Exception e) {
-			return ResponseEntity.internalServerError().body("單位主管同步過程中發生未知錯誤");
+			return ResponseEntity.internalServerError().body("組織管理者資訊同步過程中發生未知錯誤");
 		}
 	}
 
 	@PostMapping("/organization-relations/sync")
+	@Operation(summary = "同步組織關係", description = "從 Radar API 同步組織關係")
+	@ApiResponse(responseCode = "200", description = "組織關係同步成功")
+	@ApiResponse(responseCode = "400", description = "組織關係同步失敗")
+	@ApiResponse(responseCode = "500", description = "內部伺服器錯誤")
 	public ResponseEntity<String> syncOrganizationRelation(
-			@RequestParam(name = "tree-type", defaultValue = "") String treeType) {
+			@Parameter(description = "樹狀結構類型") @RequestParam(name = "tree-type", defaultValue = "") String treeType) {
 		try {
 			String apiUrl = radarAPIServerURI + "/api/Org/OrganizationRelation";
 			Map<String, String> params = new HashMap<>();
@@ -116,14 +139,18 @@ public class FetchRadarDataController {
 	}
 
 	@PostMapping("/employees/sync")
+	@Operation(summary = "同步員工資訊", description = "從 Radar API 同步員工資訊")
+	@ApiResponse(responseCode = "200", description = "員工資訊同步成功")
+	@ApiResponse(responseCode = "400", description = "員工資訊同步失敗")
+	@ApiResponse(responseCode = "500", description = "內部伺服器錯誤")
 	public ResponseEntity<String> syncEmployeeInfo(
-			@RequestParam(name = "employee-no", defaultValue = "") String employeeNo,
-			@RequestParam(name = "base-date", defaultValue = "") String baseDate) {
+			@Parameter(description = "員工編號") @RequestParam(name = "employee-no", defaultValue = "") String employeeNo,
+			@Parameter(description = "基準日期") @RequestParam(name = "base-date", defaultValue = "") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
 		try {
 			String apiUrl = radarAPIServerURI + "/api/ZZApi/ZZEmployeeInfo";
 			Map<String, String> params = new HashMap<>();
 			params.put("employeeNos", employeeNo);
-			params.put("baseDate", baseDate);
+			params.put("baseDate", baseDate != null ? baseDate.toString() : "");
 			ResponseEntity<String> response = fetchFromRadarAPI(apiUrl, params);
 			apiEmployeeInfoService.processEmployeeInfo(response);
 			return ResponseEntity.ok("員工資訊同步成功");
@@ -134,37 +161,50 @@ public class FetchRadarDataController {
 		}
 	}
 
-	@GetMapping("/organization-relations")
-	public ResponseEntity<?> organizationRelations(
-			@RequestParam(name = "tree-type", defaultValue = "") String treeType) {
+	@GetMapping("/organization-relations/sync")
+	@Operation(summary = "獲取組織關係", description = "獲取指定樹狀結構類型的組織關係")
+	@ApiResponse(responseCode = "200", description = "成功獲取組織關係")
+	@ApiResponse(responseCode = "500", description = "內部伺服器錯誤")
+	public ResponseEntity<List<WholeOrgTreeDto>> syncOrganizationRelations(
+			@Parameter(description = "樹狀結構類型") @RequestParam(name = "tree-type", defaultValue = "") String treeType) {
 		try {
 			List<WholeOrgTreeDto> orgRelations = apiOrganizationRelationService
 					.fetchOrganizationRelationByorgTreeType(treeType);
 			return ResponseEntity.ok(orgRelations);
 		} catch (Exception e) {
-			return ResponseEntity.internalServerError().body("獲取組織關係時發生錯誤: " + e.getMessage());
+			log.error("獲取組織關係時發生錯誤", e);
+			return ResponseEntity.internalServerError().build();
 		}
 	}
 
-	@GetMapping("/organization-manager/check")
-	public ResponseEntity<?> isOrgManager(
-			@RequestParam(name = "employee-no", defaultValue = "") String employeeNo,			
-			@RequestParam(name = "org-code", defaultValue = "") String orgCode) {
+	@GetMapping("/organization-managers/check")
+	@Operation(summary = "檢查是否為組織管理者", description = "檢查指定員工是否為指定組織的管理者")
+	@ApiResponse(responseCode = "200", description = "成功檢查組織管理者狀態")
+	@ApiResponse(responseCode = "500", description = "內部伺服器錯誤")
+	public ResponseEntity<Boolean> isOrgManager(
+			@Parameter(description = "員工編號") @RequestParam(name = "employee-no", defaultValue = "") String employeeNo,
+			@Parameter(description = "組織代碼") @RequestParam(name = "org-code", defaultValue = "") String orgCode) {
 		try {
-			return ResponseEntity.ok(apiOrganizationManagerService.existsByEmployeeNoAndOrgCode(employeeNo, orgCode));
+			boolean isManager = apiOrganizationManagerService.existsByEmployeeNoAndOrgCode(employeeNo, orgCode);
+			return ResponseEntity.ok(isManager);
 		} catch (Exception e) {
-			return ResponseEntity.internalServerError().body("獲取組織關係時發生錯誤: " + e.getMessage());
+			log.error("檢查組織管理者狀態時發生錯誤", e);
+			return ResponseEntity.internalServerError().build();
 		}
 	}
 
 	@PostMapping("/system/initialization")
+	@Operation(summary = "初始化系統", description = "執行系統初始化，同步所有必要的數據")
+	@ApiResponse(responseCode = "200", description = "系統初始化成功")
+	@ApiResponse(responseCode = "500", description = "系統初始化失敗")
 	public ResponseEntity<String> initDatabase() {
 		try {
+			// 此同步數據順序也應該是未來各自 api 被呼叫的順序
 			syncCompany();
-			syncOrganization("", "");
-			syncOrganizationManager("", "");
+			syncOrganization("", null);
 			syncOrganizationRelation("");
-			syncEmployeeInfo("", "");
+			syncOrganizationManager("", null);
+			syncEmployeeInfo("", null);
 			return ResponseEntity.ok("資料庫初始化成功");
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().body("資料庫初始化失敗: " + e.getMessage());

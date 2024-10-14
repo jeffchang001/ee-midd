@@ -1,5 +1,7 @@
 package com.sogo.ee.midd.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,5 +15,7 @@ public interface APIOrganizationRepository extends JpaRepository<APIOrganization
     @Modifying
     @Query(value = "TRUNCATE TABLE api_organization", nativeQuery = true)
     void truncateTable();
+
+    List<APIOrganization> findByStatus(String status);
 
 }
