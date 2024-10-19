@@ -161,11 +161,11 @@ public class FetchRadarDataController {
 		}
 	}
 
-	@GetMapping("/organization-relations/sync")
+	@GetMapping("/organization-relations/fetch")
 	@Operation(summary = "獲取組織關係", description = "獲取指定樹狀結構類型的組織關係")
 	@ApiResponse(responseCode = "200", description = "成功獲取組織關係")
 	@ApiResponse(responseCode = "500", description = "內部伺服器錯誤")
-	public ResponseEntity<List<WholeOrgTreeDto>> syncOrganizationRelations(
+	public ResponseEntity<List<WholeOrgTreeDto>> fetchOrganizationRelations(
 			@Parameter(description = "樹狀結構類型") @RequestParam(name = "tree-type", defaultValue = "") String treeType) {
 		try {
 			List<WholeOrgTreeDto> orgRelations = apiOrganizationRelationService
