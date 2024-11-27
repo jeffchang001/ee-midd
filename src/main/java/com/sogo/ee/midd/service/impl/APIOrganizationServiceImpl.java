@@ -54,21 +54,28 @@ public class APIOrganizationServiceImpl implements APIOrganizationService {
                     + (newOrganizationList != null ? newOrganizationList.size() : "null"));
 
             if (newOrganizationList != null && !newOrganizationList.isEmpty()) {
+
+                // 步驟 1：將原 table 數據存至 Archived
                 List<APIOrganizationArchived> archivedList = archiveCurrentData();
                 log.info("Archived list size: " + archivedList.size());
 
+                // 步驟 2：清空當前表格並插入新數據
                 organizationRepo.truncateTable();
                 log.info("organizationRepo Table truncated");
 
+                // 步驟 3：更新需要更新的資料狀態 (C:新增, U:更新)
                 updateStatusForNewData(newOrganizationList);
                 log.info("Status updated for new data");
 
+                // 步驟 4：保存新數據
                 List<APIOrganization> savedList = organizationRepo.saveAll(newOrganizationList);
                 log.info("Saved new organization list size: " + savedList.size());
 
+                // 步驟 5：驗證筆數
                 List<APIOrganization> verifiedList = organizationRepo.findAll();
                 log.info("Verified saved organization list size: " + verifiedList.size());
 
+                // 步驟 6：產生操作日誌供 API 使用
                 generateActionLogs();
             } else {
                 log.warn("No new organization data to process");

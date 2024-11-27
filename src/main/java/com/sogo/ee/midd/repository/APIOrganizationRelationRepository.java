@@ -16,8 +16,14 @@ public interface APIOrganizationRelationRepository extends JpaRepository<APIOrga
     @Query(value = "TRUNCATE TABLE api_organization_relation", nativeQuery = true)
     void truncateTable();
 
+    @Query("SELECT r FROM APIOrganizationRelation r " +
+           "JOIN APIOrganization o ON r.orgCode = o.orgCode " +
+           "WHERE r.status = :status")
     List<APIOrganizationRelation> findByStatus(String status);
 
+    @Query("SELECT r FROM APIOrganizationRelation r " +
+           "JOIN APIOrganization o ON r.orgCode = o.orgCode " +
+           "WHERE r.orgTreeType = :orgTreeType")
     List<APIOrganizationRelation> findByOrgTreeType(String orgTreeType);
 
 }

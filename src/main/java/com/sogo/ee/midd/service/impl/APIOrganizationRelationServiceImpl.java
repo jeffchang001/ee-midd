@@ -60,7 +60,10 @@ public class APIOrganizationRelationServiceImpl implements APIOrganizationRelati
             List<APIOrganizationRelation> newOrganizationRelationList = apiOrganizationRelationResponse.getResult();
             log.info("Parsed OrganizationRelation list size: " + newOrganizationRelationList.size());
 
+             // 步驟 1：將原 table 數據存至 Archived
             List<APIOrganizationRelationArchived> archivedList = archiveCurrentData();
+
+            
             List<OrganizationChangeImpactDto> impacts = compareAndGenerateActionLogs(newOrganizationRelationList,
                     archivedList);
             updateOrganizationRelations(newOrganizationRelationList);
@@ -173,7 +176,7 @@ public class APIOrganizationRelationServiceImpl implements APIOrganizationRelati
     public List<WholeOrgTreeDto> fetchOrganizationRelationByorgTreeType(String treeType) throws Exception {
         List<APIOrganizationRelation> apiOrganizationRelationList = organizationRelationRepo
                 .findByOrgTreeType(treeType);
-
+        log.info("apiOrganizationRelationList size: " + apiOrganizationRelationList.size());
         List<WholeOrgTreeDto> wholeOrgTreeDtoList = new ArrayList<>();
         for (APIOrganizationRelation apiOrganizationRelation : apiOrganizationRelationList) {
             WholeOrgTreeDto wholeOrgTreeDto = new WholeOrgTreeDto();

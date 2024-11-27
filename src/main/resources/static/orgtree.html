@@ -138,10 +138,10 @@
                 <input
                     type="text"
                     id="api-url"
-                    value="http://114.32.170.102:8080/ee-midd/organization-relations/fetch?tree-type=0"
+                    value=""
                     placeholder="Enter API URL"
                 />
-                <button onclick="fetchAndRenderTree()">Load Tree</button>
+                <button onclick="fetchAndRenderTree(1)">Load Tree</button>
                 <input
                     type="text"
                     id="search-org-input"
@@ -480,11 +480,17 @@
                 return null;
             }
 
-            function fetchAndRenderTree() {
+            function fetchAndRenderTree(status) {
+                // 使用當前網頁的 hostname 來構建 API URL
+                if(status=="0"){
+                    document.getElementById("api-url").value = `${window.location.protocol}//${window.location.host}/ee-midd/organization-relations/fetch?tree-type=0`;
+                }
+
                 const apiUrl = document.getElementById("api-url").value;
                 // 顯示 Loading 畫面
                 document.getElementById("loading-screen").style.display =
                     "flex";
+
                 fetch(apiUrl, {
                     method: "GET",
                     mode: "cors",
@@ -541,7 +547,7 @@
                     "DC=sogotest,DC=local",
                     commands
                 );
-                
+
                 const BOM = "\uFEFF";
                 const blob = new Blob([BOM + commands.join("\n")], {
                     type: "text/plain;charset=utf-8",
@@ -591,7 +597,7 @@
             }
 
             function checkIfManager(employeeNo, orgCode) {
-                const apiUrl = `http://114.32.170.102:8080/ee-midd/organization-manager/check?employee-no=${employeeNo}&org-code=${orgCode}`;
+                const apiUrl = `${window.location.protocol}//${window.location.host}/ee-midd/organization-managers/check?employee-no=${employeeNo}&org-code=${orgCode}`;
                 let isManager = false;
 
                 const xhr = new XMLHttpRequest();
@@ -673,7 +679,7 @@
             }
 
             // Initial load
-            fetchAndRenderTree();
+            fetchAndRenderTree(0);
         </script>
     </body>
 </html>

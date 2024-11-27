@@ -57,7 +57,7 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 					+ (newEmployeeInfoList != null ? newEmployeeInfoList.size() : "null"));
 
 			if (newEmployeeInfoList != null && !newEmployeeInfoList.isEmpty()) {
-				// 步驟 1：將當前數據存檔
+				// 步驟 1：將原 table 數據存至 Archived 
 				List<APIEmployeeInfoArchived> archivedList = archiveCurrentData();
 				log.info("Archived list size: " + archivedList.size());
 
@@ -65,17 +65,19 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 				employeeInfoRepo.truncateTable();
 				log.info("employeeInfoRepo Table truncated");
 
+				// 步驟 3：更新需要更新的資料狀態 (C:新增, U:更新, D:刪除)
 				updateStatusForNewData(newEmployeeInfoList);
 				log.info("Status updated for new data");
 
+				// 步驟 4：保存新數據
 				List<APIEmployeeInfo> savedList = employeeInfoRepo.saveAll(newEmployeeInfoList);
 				log.info("Saved new employee list size: " + savedList.size());
 
-				// 驗證保存
+				// 步驟 5：驗證筆數
 				List<APIEmployeeInfo> verifiedList = employeeInfoRepo.findAll();
 				log.info("Verified saved employee list size: " + verifiedList.size());
 
-				// // 生成操作日誌
+				// 步驟 6：產生操作日誌供 API 使用
 				generateActionLogs();
 
 			} else {
@@ -143,18 +145,15 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 			log.info("modifiedDate.equals(today)============" + modifiedDate.equals(today));
 			log.info("employedStatus============" + info.getEmployedStatus());
 
-			// TODO: 這個比較方式, 由於每30分鐘會執行一次, 因此現在的判斷方式不夠完善, 但為了先處理後續開發, 待改善
+			// TODO: 這個比較方式, 由於每30分鐘會執行一次, 因此現在的判斷方式不夠完善, 但為了先處理後續開發, 待改善; 但後來發現 Radar 一日只有兩次 1:00, 12:00 會跑排程更新, 因此可以確認一下做法
 			if (today.equals(createdDate) && today.equals(modifiedDate) && "1".equals(info.getEmployedStatus())) {
-				log.info("ccc");
 				info.setStatus("C");
 			} else if ((createdDate.isBefore(today) || createdDate.equals(today)) && modifiedDate.equals(today)
 					&& "1".equals(info.getEmployedStatus())) {
 				info.setStatus("U");
-				log.info("uuu");
 			} else if ((createdDate.isBefore(today) || createdDate.equals(today)) && modifiedDate.equals(today)
 					&& !"1".equals(info.getEmployedStatus())) {
 				info.setStatus("D");
-				log.info("ddd");
 			}
 
 			log.info("info.getStatus()============" + info.getStatus());
