@@ -8,4 +8,6 @@ public interface APIEmployeeInfoService {
 
     public void processEmployeeInfo(ResponseEntity<String> response) throws Exception;
 
+    public void compareAndProcessEmployeeInfo(ResponseEntity<String> response) throws Exception;
+
 }

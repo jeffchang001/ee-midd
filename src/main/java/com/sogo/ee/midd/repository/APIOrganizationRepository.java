@@ -18,4 +18,6 @@ public interface APIOrganizationRepository extends JpaRepository<APIOrganization
 
     List<APIOrganization> findByStatus(String status);
 
+    APIOrganization findByOrgCode(String orgCode);
+
 }

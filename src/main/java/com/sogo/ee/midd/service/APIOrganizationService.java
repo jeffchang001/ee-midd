@@ -8,4 +8,6 @@ public interface APIOrganizationService {
 
     public void processOrganization(ResponseEntity<String> response) throws Exception;
 
+    public void compareAndProcessOrganization(ResponseEntity<String> response) throws Exception;
+
 }

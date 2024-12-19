@@ -56,27 +56,27 @@ public class APIOrganizationServiceImpl implements APIOrganizationService {
             if (newOrganizationList != null && !newOrganizationList.isEmpty()) {
 
                 // 步驟 1：將原 table 數據存至 Archived
-                List<APIOrganizationArchived> archivedList = archiveCurrentData();
-                log.info("Archived list size: " + archivedList.size());
+                //List<APIOrganizationArchived> archivedList = archiveCurrentData();
+                //log.info("Archived list size: " + archivedList.size());
 
                 // 步驟 2：清空當前表格並插入新數據
                 organizationRepo.truncateTable();
                 log.info("organizationRepo Table truncated");
 
                 // 步驟 3：更新需要更新的資料狀態 (C:新增, U:更新)
-                updateStatusForNewData(newOrganizationList);
-                log.info("Status updated for new data");
+                //updateStatusForNewData(newOrganizationList);
+                //log.info("Status updated for new data");
 
                 // 步驟 4：保存新數據
                 List<APIOrganization> savedList = organizationRepo.saveAll(newOrganizationList);
                 log.info("Saved new organization list size: " + savedList.size());
 
                 // 步驟 5：驗證筆數
-                List<APIOrganization> verifiedList = organizationRepo.findAll();
-                log.info("Verified saved organization list size: " + verifiedList.size());
+                //List<APIOrganization> verifiedList = organizationRepo.findAll();
+                //log.info("Verified saved organization list size: " + verifiedList.size());
 
                 // 步驟 6：產生操作日誌供 API 使用
-                generateActionLogs();
+                //generateActionLogs();
             } else {
                 log.warn("No new organization data to process");
             }
@@ -223,5 +223,64 @@ public class APIOrganizationServiceImpl implements APIOrganizationService {
 
         archivedRepo.truncateTable();
         archivedRepo.saveAll(archivedList);
+    }
+
+    @Transactional
+    public void compareAndProcessOrganization(ResponseEntity<String> response) throws Exception {
+        //Step 1: 取得並解析 json file
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        APIOrganizationDto apiOrganizationResponse = objectMapper.readValue(response.getBody(),
+                APIOrganizationDto.class);
+        List<APIOrganization> organizationList = apiOrganizationResponse.getResult();
+
+        //Step 2: 與資料庫比對每一筆資料, 先確認資料庫是否存在,; 若不存在, a) 新增資料, b) 則在 Acton Log 增加新增資訊; 若存在：a) 更新資料, b) 則在 Acton Log 增加修改資訊
+        APIOrganization dbOrg = null;
+        List<APIOrganizationActionLog> actionLogList = new ArrayList<>();
+        for (APIOrganization apiOrg : organizationList) {
+            dbOrg = organizationRepo.findByOrgCode(apiOrg.getOrgCode());
+            if (dbOrg == null) {
+                organizationRepo.save(apiOrg);
+                APIOrganizationActionLog actionLog = new APIOrganizationActionLog(apiOrg.getOrgCode(), "C",
+                        "org_code", null, apiOrg.getOrgCode());
+                actionLogList.add(actionLog);
+            } else {
+                organizationRepo.save(apiOrg);
+
+                Field[] fields = APIOrganization.class.getDeclaredFields();
+                for (Field field : fields) {
+                    if (field.getName().equals("id") || field.getName().equals("status")) {
+                        continue;
+                    }
+                    field.setAccessible(true);
+                    try {
+                        Object newValue = field.get(apiOrg);
+                        Field oldField = null;
+                        try {
+                            oldField = APIOrganization.class.getDeclaredField(field.getName());
+                            oldField.setAccessible(true);
+                        } catch (NoSuchFieldException e) {
+                            log.warn("Field {} not found in APIOrganization", field.getName());
+                            continue;
+                        }
+
+                        Object oldValue = oldField.get(dbOrg);
+
+                        if (!Objects.equals(newValue, oldValue)) {
+                            actionLogList.add(new APIOrganizationActionLog(
+                                    apiOrg.getOrgCode(),
+                                    "U",
+                                    field.getName(),
+                                    oldValue != null ? oldValue.toString() : null,
+                                    newValue != null ? newValue.toString() : null));
+                        }
+                    } catch (IllegalAccessException e) {
+                        log.error("Error accessing field: " + field.getName(), e);
+                    }
+                }
+            }
+        }
+        log.info("actionLogList info: " + actionLogList.toString());
+        actionLogRepo.saveAll(actionLogList);
     }
 }
