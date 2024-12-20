@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -57,28 +58,28 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 					+ (newEmployeeInfoList != null ? newEmployeeInfoList.size() : "null"));
 
 			if (newEmployeeInfoList != null && !newEmployeeInfoList.isEmpty()) {
-				// 步驟 1：將原 table 數據存至 Archived 
-				//List<APIEmployeeInfoArchived> archivedList = archiveCurrentData();
-				//log.info("Archived list size: " + archivedList.size());
+				// 步驟 1：將原 table 數據存至 Archived
+				// List<APIEmployeeInfoArchived> archivedList = archiveCurrentData();
+				// log.info("Archived list size: " + archivedList.size());
 
 				// 步驟 2：清空當前表格並插入新數據
 				employeeInfoRepo.truncateTable();
 				log.info("employeeInfoRepo Table truncated");
 
 				// 步驟 3：更新需要更新的資料狀態 (C:新增, U:更新, D:刪除)
-				//updateStatusForNewData(newEmployeeInfoList);
-				//log.info("Status updated for new data");
+				// updateStatusForNewData(newEmployeeInfoList);
+				// log.info("Status updated for new data");
 
 				// 步驟 4：保存新數據
 				List<APIEmployeeInfo> savedList = employeeInfoRepo.saveAll(newEmployeeInfoList);
 				log.info("Saved new employee list size: " + savedList.size());
 
 				// 步驟 5：驗證筆數
-				//List<APIEmployeeInfo> verifiedList = employeeInfoRepo.findAll();
-				//log.info("Verified saved employee list size: " + verifiedList.size());
+				// List<APIEmployeeInfo> verifiedList = employeeInfoRepo.findAll();
+				// log.info("Verified saved employee list size: " + verifiedList.size());
 
 				// 步驟 6：產生操作日誌供 API 使用
-				//generateActionLogs();
+				// generateActionLogs();
 
 			} else {
 				log.warn("No new employee data to process");
@@ -145,7 +146,8 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 			log.info("modifiedDate.equals(today)============" + modifiedDate.equals(today));
 			log.info("employedStatus============" + info.getEmployedStatus());
 
-			// TODO: 這個比較方式, 由於每30分鐘會執行一次, 因此現在的判斷方式不夠完善, 但為了先處理後續開發, 待改善; 但後來發現 Radar 一日只有兩次 1:00, 12:00 會跑排程更新, 因此可以確認一下做法
+			// TODO: 這個比較方式, 由於每30分鐘會執行一次, 因此現在的判斷方式不夠完善, 但為了先處理後續開發, 待改善; 但後來發現 Radar
+			// 一日只有兩次 1:00, 12:00 會跑排程更新, 因此可以確認一下做法
 			if (today.equals(createdDate) && today.equals(modifiedDate) && "1".equals(info.getEmployedStatus())) {
 				info.setStatus("C");
 			} else if ((createdDate.isBefore(today) || createdDate.equals(today)) && modifiedDate.equals(today)
@@ -302,12 +304,80 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 
 	@Transactional
 	public void compareAndProcessEmployeeInfo(ResponseEntity<String> response) throws Exception {
-		//Step 1: 取得並解析 json file
+		// Step 1: 取得並解析 json file
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+		APIEmployeeInfoDto apiEmployeeInfoResponse = objectMapper.readValue(response.getBody(),
+				APIEmployeeInfoDto.class);
 
-        //Step 2: 與資料庫比對每一筆資料, 先確認資料庫是否存在,; 若不存在, a) 新增資料, b) 則在 Acton Log 增加新增資訊; 若存在：a) 更新資料, b) 則在 Acton Log 增加修改資訊
+		List<APIEmployeeInfo> employeeInfoList = apiEmployeeInfoResponse.getResult();
 
+		// Step 2: 與資料庫比對每一筆資料, 先確認資料庫是否存在,; 若不存在, a) 新增資料, b) 則在 Acton Log 增加新增資訊;
+		// 若存在：a) 更新資料, b) 則在 Acton Log 增加修改資訊
+		APIEmployeeInfo dbEmployeeInfo = null;
+		List<APIEmployeeInfoActionLog> actionLogList = new ArrayList<>();
+		for (APIEmployeeInfo apiEmployeeInfo : employeeInfoList) {
+			dbEmployeeInfo = employeeInfoRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
+			if (dbEmployeeInfo == null) {
+				employeeInfoRepo.save(apiEmployeeInfo);
+				APIEmployeeInfoActionLog actionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "C",
+						"employee_no", null, apiEmployeeInfo.getEmployeeNo());
+				actionLogList.add(actionLog);
+			} else {
+				Field[] fields = APIEmployeeInfo.class.getDeclaredFields();
+				for (Field field : fields) {
+					if (field.getName().equals("id") || field.getName().equals("status")) {
+						// 忽略 id 和 status
+						continue;
+					}
+					field.setAccessible(true);
+					try {
+						Object newValue = field.get(apiEmployeeInfo);
 
+						// 嘗試從 APIEmployeeInfoArchived 獲取相同名稱的欄位
+						Field oldField = null;
+						try {
+							oldField = APIEmployeeInfo.class.getDeclaredField(field.getName());
+							oldField.setAccessible(true);
+						} catch (NoSuchFieldException e) {
+							// 如果欄位不存在，我們會跳過這個欄位的比較
+							log.warn("Field {} not found in APIEmployeeInfo]", field.getName());
+							continue;
+						}
 
+						Object oldValue = oldField.get(dbEmployeeInfo);
+
+						// 若新舊值不同, 則在 Action Log 中增加修改資訊, 只要不同就先修改, 無論是否在職
+						if (!Objects.equals(newValue, oldValue)) {
+							actionLogList.add(new APIEmployeeInfoActionLog(
+									apiEmployeeInfo.getEmployeeNo(),
+									"U",
+									field.getName(),
+									oldValue != null ? oldValue.toString() : null,
+									newValue != null ? newValue.toString() : null));
+						}
+
+						// 若是非在職, 則代表需要刪除（停用）此員工
+						if (!"1".equals(apiEmployeeInfo.getEmployedStatus())) {
+							actionLogList.add(new APIEmployeeInfoActionLog(
+									apiEmployeeInfo.getEmployeeNo(),
+									"D",
+									"employee_no",
+									null,
+									apiEmployeeInfo.getEmployeeNo()));
+						}
+					} catch (IllegalAccessException e) {
+						log.error("Error accessing field: " + field.getName(), e);
+					}
+				}
+				// 存在的話，將 apiEmployeeInfo 的屬性複製給 dbEmployeeInfo
+				BeanUtils.copyProperties(apiEmployeeInfo, dbEmployeeInfo, "id", "status");
+				employeeInfoRepo.save(dbEmployeeInfo);
+
+			}
+		}
+		log.info("actionLogList info: " + actionLogList.toString());
+		actionLogRepo.saveAll(actionLogList);
 	}
-		
+
 }

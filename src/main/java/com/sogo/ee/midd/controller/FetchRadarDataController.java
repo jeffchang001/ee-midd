@@ -29,6 +29,7 @@ import com.sogo.ee.midd.service.APIOrganizationService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -252,7 +253,8 @@ public class FetchRadarDataController {
 	@ApiResponse(responseCode = "500", description = "內部伺服器錯誤")
 	public ResponseEntity<String> fetchCompareOrganization(
 			@Parameter(description = "組織代碼") @RequestParam(name = "org-code", defaultValue = "") String orgCode,
-			@Parameter(description = "基準日期：指定日期之後的資料") @RequestParam(name = "base-date", defaultValue = "", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
+			@Parameter(description = "基準日期：指定日期之後的資料", schema = @Schema(type = "string", format = "date", example = "2024-09-25")) 
+			@RequestParam(name = "base-date", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
 		try {
 			String apiUrl = radarAPIServerURI + "/api/ZZApi/ZZOrganization";
 			Map<String, String> params = new HashMap<>();
@@ -277,7 +279,8 @@ public class FetchRadarDataController {
 	@ApiResponse(responseCode = "500", description = "內部伺服器錯誤")
 	public ResponseEntity<String> fetchCompareEmployeeInfo(
 			@Parameter(description = "員工編號") @RequestParam(name = "employee-no", defaultValue = "") String employeeNo,
-			@Parameter(description = "基準日期：日期之後的資料") @RequestParam(name = "base-date", defaultValue = "", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
+			@Parameter(description = "基準日期：日期之後的資料", schema = @Schema(type = "string", format = "date", example = "2024-09-25")) 
+			@RequestParam(name = "base-date", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
 		try {
 			String apiUrl = radarAPIServerURI + "/api/ZZApi/ZZEmployeeInfo";
 			Map<String, String> params = new HashMap<>();
