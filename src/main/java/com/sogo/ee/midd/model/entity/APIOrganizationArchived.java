@@ -58,6 +58,10 @@ public class APIOrganizationArchived {
     @Column(name = "EndDate")
     private LocalDateTime endDate;
 
+    @JsonProperty("OrgPropertyCode")
+    @Column(name = "OrgPropertyCode")
+    private String orgPropertyCode;
+
     @JsonProperty("Remark")
     @Column(name = "Remark")
     private String remark;

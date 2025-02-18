@@ -311,6 +311,7 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 				APIEmployeeInfoDto.class);
 
 		List<APIEmployeeInfo> employeeInfoList = apiEmployeeInfoResponse.getResult();
+		log.info(employeeInfoList.size() + " 筆 json employee info received");
 
 		// Step 2: 與資料庫比對每一筆資料, 先確認資料庫是否存在,; 若不存在, a) 新增資料, b) 則在 Acton Log 增加新增資訊;
 		// 若存在：a) 更新資料, b) 則在 Acton Log 增加修改資訊
@@ -326,15 +327,15 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 			} else {
 				Field[] fields = APIEmployeeInfo.class.getDeclaredFields();
 				for (Field field : fields) {
-					if (field.getName().equals("id") || field.getName().equals("status")) {
-						// 忽略 id 和 status
+					// 忽略 id, status, dateOfBirth
+					if (field.getName().equals("id") || field.getName().equals("status") || field.getName().equals("dateOfBirth")) {
 						continue;
 					}
 					field.setAccessible(true);
 					try {
 						Object newValue = field.get(apiEmployeeInfo);
 
-						// 嘗試從 APIEmployeeInfoArchived 獲取相同名稱的欄位
+						// 嘗試從 DB:APIEmployeeInfo 獲取相同名稱的欄位
 						Field oldField = null;
 						try {
 							oldField = APIEmployeeInfo.class.getDeclaredField(field.getName());
@@ -357,23 +358,21 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 									newValue != null ? newValue.toString() : null));
 						}
 
-						// 若是非在職, 則代表需要刪除（停用）此員工
-						if (!"1".equals(apiEmployeeInfo.getEmployedStatus())) {
-							actionLogList.add(new APIEmployeeInfoActionLog(
-									apiEmployeeInfo.getEmployeeNo(),
-									"D",
-									"employee_no",
-									null,
-									apiEmployeeInfo.getEmployeeNo()));
-						}
 					} catch (IllegalAccessException e) {
 						log.error("Error accessing field: " + field.getName(), e);
 					}
 				}
+				
+				// 若在職狀態不同, 則在 Action Log 中增加刪除資訊
+				if(!"1".equals(apiEmployeeInfo.getEmployedStatus())) {
+					APIEmployeeInfoActionLog actionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "D",
+							"employed_status", dbEmployeeInfo.getEmployedStatus(), apiEmployeeInfo.getEmployedStatus());
+					actionLogList.add(actionLog);
+				}
+
 				// 存在的話，將 apiEmployeeInfo 的屬性複製給 dbEmployeeInfo
 				BeanUtils.copyProperties(apiEmployeeInfo, dbEmployeeInfo, "id", "status");
 				employeeInfoRepo.save(dbEmployeeInfo);
-
 			}
 		}
 		log.info("actionLogList info: " + actionLogList.toString());
