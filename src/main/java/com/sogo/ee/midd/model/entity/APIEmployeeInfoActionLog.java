@@ -48,9 +48,6 @@ public class APIEmployeeInfoActionLog {
     @Column(name = "CreatedDate", nullable = false)
     private LocalDateTime createdDate;
 
-    @Column(name = "IsSync")
-    private Boolean isSync = Boolean.FALSE;
-
     public APIEmployeeInfoActionLog(String employeeNo, String action, String fieldName,
             String oldValue, String newValue) {
         this.employeeNo = employeeNo;

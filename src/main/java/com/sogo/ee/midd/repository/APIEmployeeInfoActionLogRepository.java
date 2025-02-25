@@ -1,5 +1,6 @@
 package com.sogo.ee.midd.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,12 +13,9 @@ public interface APIEmployeeInfoActionLogRepository extends JpaRepository<APIEmp
 
     List<APIEmployeeInfoActionLog> findByEmployeeNoAndAction(String employeeNo, String action);
 
-    List<APIEmployeeInfoActionLog> findByEmployeeNoAndActionAndIsSync(String employeeNo, String action, Boolean isSync);
-
-    List<APIEmployeeInfoActionLog> findByIsSync(Boolean isSync);
-
-    List<APIEmployeeInfoActionLog> findByIsSyncAndAction(String isSync, String action);
+    List<APIEmployeeInfoActionLog> findByEmployeeNoAndActionAndCreatedDate(String employeeNo, String action, LocalDateTime createdDate);
 
     List<APIEmployeeInfoActionLog> findByAction(String action);
 
 }
+

@@ -1,16 +1,21 @@
 package com.sogo.ee.midd.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sogo.ee.midd.model.dto.ADSyncDto;
 import com.sogo.ee.midd.service.ADSyncService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -30,9 +35,11 @@ public class ADSyncController {
     @ApiResponse(responseCode = "204", description = "未找到 AD 同步數據")
     @ApiResponse(responseCode = "500", description = "伺服器內部錯誤")
     @GetMapping("/ad-sync-data")
-    public ResponseEntity<Object> getADSyncData() {
+    public ResponseEntity<Object> getADSyncData(
+        @Parameter(description = "基準日期：日期之後的資料", schema = @Schema(type = "string", format = "date", example = "2024-09-25")) 
+			@RequestParam(name = "base-date", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
         try {
-            List<ADSyncDto> adSyncData = adSyncService.getADSyncData();
+            List<ADSyncDto> adSyncData = adSyncService.getADSyncData(baseDate);
             if (adSyncData.isEmpty()) {
                 log.info("未找到 AD 同步數據");
                 return ResponseEntity.noContent().build();

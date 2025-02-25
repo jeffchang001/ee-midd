@@ -48,9 +48,6 @@ public class APIOrganizationActionLog {
     @Column(name = "CreatedDate", nullable = false)
     private LocalDateTime createdDate;
 
-    @Column(name = "IsSync")
-    private Boolean isSync = Boolean.FALSE;
-
     public APIOrganizationActionLog(String orgCode, String action, String fieldName,
             String oldValue, String newValue) {
         this.orgCode = orgCode;

@@ -2,6 +2,7 @@ package com.sogo.ee.midd.service.impl;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -141,14 +142,14 @@ public class APIOrganizationServiceImpl implements APIOrganizationService {
         }
     }
 
-    private void generateActionLogs() {
+    private void generateActionLogs(LocalDateTime createdDate) {
         List<APIOrganization> createAPIOrganizationList = organizationRepo.findByStatus("C");
         List<APIOrganization> updateAPIOrganizationList = organizationRepo.findByStatus("U");
 
         for (APIOrganization apiOrganization : createAPIOrganizationList) {
             APIOrganizationArchived tmpOrgArchived = archivedRepo.findByOrgCode(apiOrganization.getOrgCode());
             List<APIOrganizationActionLog> tmpActionLogList = actionLogRepo
-                    .findByOrgCodeAndActionAndIsSync(apiOrganization.getOrgCode(), "C", false);
+                    .findByOrgCodeAndActionAndCreatedDate(apiOrganization.getOrgCode(), "C", createdDate);
             if (tmpOrgArchived == null && tmpActionLogList.isEmpty()) {
                 APIOrganizationActionLog tmpActionLog = new APIOrganizationActionLog(apiOrganization.getOrgCode(), "C",
                         "org_code", null, apiOrganization.getOrgCode());
@@ -159,7 +160,7 @@ public class APIOrganizationServiceImpl implements APIOrganizationService {
         for (APIOrganization apiOrganization : updateAPIOrganizationList) {
             APIOrganizationArchived tmpOrgArchived = archivedRepo.findByOrgCode(apiOrganization.getOrgCode());
             List<APIOrganizationActionLog> tmpActionLogList = actionLogRepo
-                    .findByOrgCodeAndActionAndIsSync(apiOrganization.getOrgCode(), "U", false);
+                    .findByOrgCodeAndActionAndCreatedDate(apiOrganization.getOrgCode(), "U", createdDate);
             if (tmpOrgArchived != null && tmpActionLogList.isEmpty()) {
                 List<APIOrganizationActionLog> newActionLogs = new ArrayList<>();
                 compareAndLogChanges(apiOrganization, tmpOrgArchived, newActionLogs);

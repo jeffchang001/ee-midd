@@ -1,5 +1,6 @@
 package com.sogo.ee.midd.service.impl;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +21,9 @@ import com.sogo.ee.midd.repository.ADSyncRepository;
 import com.sogo.ee.midd.repository.APIEmployeeInfoRepository;
 import com.sogo.ee.midd.service.ADSyncService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class ADSyncServiceImpl implements ADSyncService {
 
@@ -33,24 +37,27 @@ public class ADSyncServiceImpl implements ADSyncService {
     private EntityManager entityManager;
 
     @Override
-    public List<ADSyncDto> getADSyncData() {
-        List<APIEmployeeInfoActionLog> actionLogs = adSyncRepository.findByIsSync(false);
-        Map<String, List<APIEmployeeInfoActionLog>> actionLogMap = actionLogs.stream()
-                .collect(Collectors.groupingBy(APIEmployeeInfoActionLog::getEmployeeNo));
+    public List<ADSyncDto> getADSyncData(LocalDate baseDate) {
+        List<APIEmployeeInfoActionLog> actionLogs = adSyncRepository.findByCreatedDate(baseDate.toString());
+        log.info("Found {} action logs", actionLogs.size());
+
+        Map<Long, List<APIEmployeeInfoActionLog>> actionLogMap = actionLogs.stream()
+                .collect(Collectors.groupingBy(APIEmployeeInfoActionLog::getId));
+        log.info("Found {} actionLogMap logs", actionLogMap.size());
 
         List<ADSyncDto> result = new ArrayList<>();
 
-        for (Map.Entry<String, List<APIEmployeeInfoActionLog>> entry : actionLogMap.entrySet()) {
-            String employeeNo = entry.getKey();
+        for (Map.Entry<Long, List<APIEmployeeInfoActionLog>> entry : actionLogMap.entrySet()) {
+            Long id = entry.getKey();
             List<APIEmployeeInfoActionLog> logs = entry.getValue();
 
             ADSyncDto adSyncDto = new ADSyncDto();
-            adSyncDto.setEmployeeNo(employeeNo);
+            adSyncDto.setEmployeeNo(logs.get(0).getEmployeeNo());
 
-            APIEmployeeInfo employeeInfo = employeeInfoRepository.findByEmployeeNo(employeeNo);
+            APIEmployeeInfo employeeInfo = employeeInfoRepository.findByEmployeeNo(logs.get(0).getEmployeeNo());
             if (employeeInfo != null) {
                 adSyncDto.setEmployeeInfo(employeeInfo);
-                adSyncDto.setOrgHierarchyDto(getOrganizationHierarchy(employeeNo));
+                adSyncDto.setOrgHierarchyDto(getOrganizationHierarchy(logs.get(0).getEmployeeNo()));    
             }
 
             String action = logs.get(0).getAction();

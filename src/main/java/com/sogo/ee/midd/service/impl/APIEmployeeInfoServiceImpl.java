@@ -2,6 +2,7 @@ package com.sogo.ee.midd.service.impl;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -163,7 +164,7 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 		}
 	}
 
-	private void generateActionLogs() {
+	private void generateActionLogs(LocalDateTime createDate) {
 		List<APIEmployeeInfo> createAPIEmployeeInfoList = employeeInfoRepo.findByEmployedStatusAndStatus("1", "C");
 		List<APIEmployeeInfo> updateAPIEmployeeInfoList = employeeInfoRepo.findByStatus("U");
 		List<APIEmployeeInfo> deleteAPIEmployeeInfoList = employeeInfoRepo.findByStatus("D");
@@ -175,8 +176,7 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 		// 處理可能需要新增的資料
 		for (APIEmployeeInfo apiEmployeeInfo : createAPIEmployeeInfoList) {
 			tmpEmployInfoArchived = archivedRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
-			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndIsSync(apiEmployeeInfo.getEmployeeNo(), "C",
-					Boolean.FALSE);
+			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndCreatedDate(apiEmployeeInfo.getEmployeeNo(), "C", createDate);
 			if (tmpEmployInfoArchived == null && tmpActionLogList.isEmpty()) {
 				// employeeInfo.status=C, 確認 archived 中沒有資料, 代表需要新增 actionLog
 				tmpActionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "C", "employee_no", null,
@@ -191,8 +191,7 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 		// 處理可能需要更新的資料
 		for (APIEmployeeInfo apiEmployeeInfo : updateAPIEmployeeInfoList) {
 			tmpEmployInfoArchived = archivedRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
-			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndIsSync(apiEmployeeInfo.getEmployeeNo(), "U",
-					Boolean.FALSE);
+			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndCreatedDate(apiEmployeeInfo.getEmployeeNo(), "U", createDate);
 			if (tmpEmployInfoArchived != null && tmpActionLogList.isEmpty()) {
 				tmpActionLogList = new ArrayList<APIEmployeeInfoActionLog>();
 				// Action 確認為更新資料, 存入 actionLog
@@ -210,8 +209,7 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 		for (APIEmployeeInfo apiEmployeeInfo : deleteAPIEmployeeInfoList) {
 			// 代表第一次判斷 employeeInfo=D, 但在 emploeeInfoArchived 中已經有資料了
 			tmpEmployInfoArchived = archivedRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
-			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndIsSync(apiEmployeeInfo.getEmployeeNo(), "D",
-					Boolean.FALSE);
+			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndCreatedDate(apiEmployeeInfo.getEmployeeNo(), "D", createDate);
 			if (tmpEmployInfoArchived != null && tmpActionLogList.size() == 0) {
 				// Action 確認為刪除資料, 存入 actionLog, 紀錄 employee status, 2=留停, 3=離職
 				tmpActionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "D", "employee_no",
@@ -322,7 +320,7 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 			if (dbEmployeeInfo == null) {
 				employeeInfoRepo.save(apiEmployeeInfo);
 				APIEmployeeInfoActionLog actionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "C",
-						"employee_no", null, apiEmployeeInfo.getEmployeeNo());
+						"employeeNo", null, apiEmployeeInfo.getEmployeeNo());
 				actionLogList.add(actionLog);
 			} else {
 				Field[] fields = APIEmployeeInfo.class.getDeclaredFields();
@@ -364,9 +362,9 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 				}
 				
 				// 若在職狀態不同, 則在 Action Log 中增加刪除資訊
-				if(!"1".equals(apiEmployeeInfo.getEmployedStatus())) {
+				if(!"1".equals(apiEmployeeInfo.getEmployedStatus()) && !apiEmployeeInfo.getEmployedStatus().equals(dbEmployeeInfo.getEmployedStatus())) {
 					APIEmployeeInfoActionLog actionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "D",
-							"employed_status", dbEmployeeInfo.getEmployedStatus(), apiEmployeeInfo.getEmployedStatus());
+							"employedStatus", dbEmployeeInfo.getEmployedStatus(), apiEmployeeInfo.getEmployedStatus());
 					actionLogList.add(actionLog);
 				}
 
