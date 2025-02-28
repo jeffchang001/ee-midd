@@ -39,7 +39,7 @@ public class ADSyncController {
         @Parameter(description = "基準日期：日期之後的資料", schema = @Schema(type = "string", format = "date", example = "2024-09-25")) 
 			@RequestParam(name = "base-date", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
         try {
-            List<ADSyncDto> adSyncData = adSyncService.getADSyncData(baseDate);
+            List<ADSyncDto> adSyncData = adSyncService.getADSyncData(baseDate.toString());
             if (adSyncData.isEmpty()) {
                 log.info("未找到 AD 同步數據");
                 return ResponseEntity.noContent().build();

@@ -37,7 +37,7 @@ public class ADSyncServiceImpl implements ADSyncService {
     private EntityManager entityManager;
 
     @Override
-    public List<ADSyncDto> getADSyncData(LocalDate baseDate) {
+    public List<ADSyncDto> getADSyncData(String baseDate) {
         List<APIEmployeeInfoActionLog> actionLogs = adSyncRepository.findByCreatedDate(baseDate.toString());
         log.info("Found {} action logs", actionLogs.size());
 
