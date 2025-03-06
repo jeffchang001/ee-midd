@@ -253,8 +253,7 @@ public class FetchRadarDataController {
 	@ApiResponse(responseCode = "500", description = "內部伺服器錯誤")
 	public ResponseEntity<String> fetchCompareOrganization(
 			@Parameter(description = "組織代碼") @RequestParam(name = "org-code", defaultValue = "") String orgCode,
-			@Parameter(description = "基準日期：指定日期之後的資料", schema = @Schema(type = "string", format = "date", example = "2024-09-25")) 
-			@RequestParam(name = "base-date", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
+			@Parameter(description = "基準日期：指定日期之後的資料", schema = @Schema(type = "string", format = "date", example = "2024-09-25")) @RequestParam(name = "base-date", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
 		try {
 			String apiUrl = radarAPIServerURI + "/api/ZZApi/ZZOrganization";
 			Map<String, String> params = new HashMap<>();
@@ -273,14 +272,13 @@ public class FetchRadarDataController {
 	}
 
 	@PostMapping("/employees/fetch-compare")
-	@Operation(summary = "取得並比對員工資訊", description = "取得指定日期後的員工資訊, 比對後產生同步 AD 資料\"")
+	@Operation(summary = "取得並比對員工資訊", description = "取得指定日期後的員工資訊, 比對後產生同步 AD 資料")
 	@ApiResponse(responseCode = "200", description = "取得並比對成功")
 	@ApiResponse(responseCode = "400", description = "取得並比對失敗")
 	@ApiResponse(responseCode = "500", description = "內部伺服器錯誤")
 	public ResponseEntity<String> fetchCompareEmployeeInfo(
 			@Parameter(description = "員工編號") @RequestParam(name = "employee-no", defaultValue = "") String employeeNo,
-			@Parameter(description = "基準日期：日期之後的資料", schema = @Schema(type = "string", format = "date", example = "2024-09-25")) 
-			@RequestParam(name = "base-date", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
+			@Parameter(description = "基準日期：日期之後的資料", schema = @Schema(type = "string", format = "date", example = "2024-09-25")) @RequestParam(name = "base-date", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
 		try {
 			String apiUrl = radarAPIServerURI + "/api/ZZApi/ZZEmployeeInfo";
 			Map<String, String> params = new HashMap<>();
@@ -295,6 +293,21 @@ public class FetchRadarDataController {
 		} catch (Exception e) {
 			log.error("取得並比對員工資訊過程中發生未知錯誤", e);
 			return ResponseEntity.internalServerError().body("取得並比對員工資訊過程中發生未知錯誤");
+		}
+	}
+
+	@Operation(summary = "取得沒有員工的組織DN列表", description = "取得組織樹中沒有任何在職員工的組織 DN 列表")
+	@ApiResponse(responseCode = "200", description = "成功取得空組織 DN 列表")
+	@ApiResponse(responseCode = "500", description = "伺服器內部錯誤")
+	@GetMapping("/empty-dns")
+	public ResponseEntity<List<String>> getEmptyOrganizationDNs(
+			@Parameter(description = "樹狀結構類型，預設為 0") @RequestParam(name = "treeType", required = false, defaultValue = "0") String treeType) {
+		try {
+			List<String> emptyOrgDNs = apiOrganizationService.getEmptyOrganizationDNs(treeType);
+			return ResponseEntity.ok(emptyOrgDNs);
+		} catch (Exception e) {
+			log.error("取得空組織 DN 列表時發生錯誤", e);
+			return ResponseEntity.internalServerError().build();
 		}
 	}
 
