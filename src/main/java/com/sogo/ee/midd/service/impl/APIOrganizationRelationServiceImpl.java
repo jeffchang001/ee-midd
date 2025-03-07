@@ -60,16 +60,8 @@ public class APIOrganizationRelationServiceImpl implements APIOrganizationRelati
             List<APIOrganizationRelation> newOrganizationRelationList = apiOrganizationRelationResponse.getResult();
             log.info("Parsed OrganizationRelation list size: " + newOrganizationRelationList.size());
 
-             // 步驟 1：將原 table 數據存至 Archived
-            List<APIOrganizationRelationArchived> archivedList = archiveCurrentData();
-
-            
-            List<OrganizationChangeImpactDto> impacts = compareAndGenerateActionLogs(newOrganizationRelationList,
-                    archivedList);
-            updateOrganizationRelations(newOrganizationRelationList);
-
-            // 照理說, employee 應該已經在先同步完成
-            // updateEmployeeOrganizations(impacts);
+            organizationRelationRepo.truncateTable();;
+            organizationRelationRepo.saveAll(newOrganizationRelationList);
 
         } catch (Exception e) {
             log.error("Error in processOrganizationRelation", e);

@@ -1,6 +1,5 @@
 package com.sogo.ee.midd.service.impl;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,7 +47,6 @@ public class ADSyncServiceImpl implements ADSyncService {
         List<ADSyncDto> result = new ArrayList<>();
 
         for (Map.Entry<Long, List<APIEmployeeInfoActionLog>> entry : actionLogMap.entrySet()) {
-            Long id = entry.getKey();
             List<APIEmployeeInfoActionLog> logs = entry.getValue();
 
             ADSyncDto adSyncDto = new ADSyncDto();
@@ -57,7 +55,7 @@ public class ADSyncServiceImpl implements ADSyncService {
             APIEmployeeInfo employeeInfo = employeeInfoRepository.findByEmployeeNo(logs.get(0).getEmployeeNo());
             if (employeeInfo != null) {
                 adSyncDto.setEmployeeInfo(employeeInfo);
-                adSyncDto.setOrgHierarchyDto(getOrganizationHierarchy(logs.get(0).getEmployeeNo()));    
+                adSyncDto.setOrgHierarchyDto(getOrganizationHierarchy(logs.get(0).getEmployeeNo()));
             }
 
             String action = logs.get(0).getAction();
