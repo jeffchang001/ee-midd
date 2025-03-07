@@ -9,4 +9,5 @@ public interface ADSyncService {
     public List<ADEmployeeSyncDto> getADEmployeeSyncData(String baseDate) throws Exception;
 
     public List<ADOrganizationSyncDto> getADOrganizationSyncData(String baseDate) throws Exception;
+
 }

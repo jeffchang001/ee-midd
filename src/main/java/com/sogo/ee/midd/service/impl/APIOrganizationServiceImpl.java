@@ -102,26 +102,6 @@ public class APIOrganizationServiceImpl implements APIOrganizationService {
         log.info("Completed processOrganization");
     }
 
-    private List<APIOrganizationArchived> archiveCurrentData() {
-        List<APIOrganization> currentOrganizationList = organizationRepo.findAll();
-        List<APIOrganizationArchived> archivedList = currentOrganizationList.stream()
-                .map(this::convertToArchived)
-                .collect(Collectors.toList());
-
-        List<APIOrganizationArchived> theAPIOrganizationArchived = archivedRepo.findAll();
-
-        log.debug("currentOrganizationList===" + currentOrganizationList.size());
-        log.debug("archivedList===" + archivedList.size());
-        log.debug("theAPIOrganizationArchived===" + theAPIOrganizationArchived.size());
-
-        if (!theAPIOrganizationArchived.isEmpty()) {
-            archivedRepo.truncateTable();
-            log.info("Archived table truncated");
-        }
-
-        return archivedRepo.saveAll(archivedList);
-    }
-
     private APIOrganizationArchived convertToArchived(APIOrganization info) {
         APIOrganizationArchived archived = new APIOrganizationArchived();
         Field[] fields = APIOrganization.class.getDeclaredFields();
@@ -136,88 +116,6 @@ public class APIOrganizationServiceImpl implements APIOrganizationService {
             }
         }
         return archived;
-    }
-
-    private void updateStatusForNewData(List<APIOrganization> newList) {
-        LocalDate today = LocalDate.now();
-        for (APIOrganization org : newList) {
-            LocalDate createdDate = org.getDataCreatedDate().toLocalDate();
-            LocalDate modifiedDate = org.getDataModifiedDate().toLocalDate();
-
-            if (today.equals(createdDate) && today.equals(modifiedDate)) {
-                org.setStatus("C");
-            } else if ((createdDate.isBefore(today) || createdDate.equals(today)) && modifiedDate.equals(today)) {
-                org.setStatus("U");
-            }
-
-            organizationRepo.save(org);
-        }
-    }
-
-    private void generateActionLogs(LocalDateTime createdDate) {
-        List<APIOrganization> createAPIOrganizationList = organizationRepo.findByStatus("C");
-        List<APIOrganization> updateAPIOrganizationList = organizationRepo.findByStatus("U");
-
-        for (APIOrganization apiOrganization : createAPIOrganizationList) {
-            APIOrganizationArchived tmpOrgArchived = archivedRepo.findByOrgCode(apiOrganization.getOrgCode());
-            List<APIOrganizationActionLog> tmpActionLogList = actionLogRepo
-                    .findByOrgCodeAndActionAndCreatedDate(apiOrganization.getOrgCode(), "C", createdDate);
-            if (tmpOrgArchived == null && tmpActionLogList.isEmpty()) {
-                APIOrganizationActionLog tmpActionLog = new APIOrganizationActionLog(apiOrganization.getOrgCode(), "C",
-                        "org_code", null, apiOrganization.getOrgCode());
-                actionLogRepo.save(tmpActionLog);
-            }
-        }
-
-        for (APIOrganization apiOrganization : updateAPIOrganizationList) {
-            APIOrganizationArchived tmpOrgArchived = archivedRepo.findByOrgCode(apiOrganization.getOrgCode());
-            List<APIOrganizationActionLog> tmpActionLogList = actionLogRepo
-                    .findByOrgCodeAndActionAndCreatedDate(apiOrganization.getOrgCode(), "U", createdDate);
-            if (tmpOrgArchived != null && tmpActionLogList.isEmpty()) {
-                List<APIOrganizationActionLog> newActionLogs = new ArrayList<>();
-                compareAndLogChanges(apiOrganization, tmpOrgArchived, newActionLogs);
-                actionLogRepo.saveAll(newActionLogs);
-            } else {
-                apiOrganization.setStatus("E");
-                organizationRepo.save(apiOrganization);
-            }
-        }
-    }
-
-    private void compareAndLogChanges(APIOrganization newInfo, APIOrganizationArchived oldInfo,
-            List<APIOrganizationActionLog> actionLogs) {
-        Field[] fields = APIOrganization.class.getDeclaredFields();
-        for (Field field : fields) {
-            if (field.getName().equals("id") || field.getName().equals("status")) {
-                continue;
-            }
-            field.setAccessible(true);
-            try {
-                Object newValue = field.get(newInfo);
-
-                Field oldField = null;
-                try {
-                    oldField = APIOrganizationArchived.class.getDeclaredField(field.getName());
-                    oldField.setAccessible(true);
-                } catch (NoSuchFieldException e) {
-                    log.warn("Field {} not found in APIOrganizationArchived", field.getName());
-                    continue;
-                }
-
-                Object oldValue = oldField.get(oldInfo);
-
-                if (!Objects.equals(newValue, oldValue)) {
-                    actionLogs.add(new APIOrganizationActionLog(
-                            newInfo.getOrgCode(),
-                            "U",
-                            field.getName(),
-                            oldValue != null ? oldValue.toString() : null,
-                            newValue != null ? newValue.toString() : null));
-                }
-            } catch (IllegalAccessException e) {
-                log.error("Error accessing field: " + field.getName(), e);
-            }
-        }
     }
 
     @Transactional
