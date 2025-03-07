@@ -12,7 +12,8 @@ import javax.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.sogo.ee.midd.model.dto.ADSyncDto;
+import com.sogo.ee.midd.model.dto.ADEmployeeSyncDto;
+import com.sogo.ee.midd.model.dto.ADOrganizationSyncDto;
 import com.sogo.ee.midd.model.dto.OrganizationHierarchyDto;
 import com.sogo.ee.midd.model.entity.APIEmployeeInfo;
 import com.sogo.ee.midd.model.entity.APIEmployeeInfoActionLog;
@@ -36,7 +37,7 @@ public class ADSyncServiceImpl implements ADSyncService {
     private EntityManager entityManager;
 
     @Override
-    public List<ADSyncDto> getADSyncData(String baseDate) {
+    public List<ADEmployeeSyncDto> getADEmployeeSyncData(String baseDate) {
         List<APIEmployeeInfoActionLog> actionLogs = adSyncRepository.findByCreatedDate(baseDate.toString());
         log.info("Found {} action logs", actionLogs.size());
 
@@ -44,12 +45,12 @@ public class ADSyncServiceImpl implements ADSyncService {
                 .collect(Collectors.groupingBy(APIEmployeeInfoActionLog::getId));
         log.info("Found {} actionLogMap logs", actionLogMap.size());
 
-        List<ADSyncDto> result = new ArrayList<>();
+        List<ADEmployeeSyncDto> result = new ArrayList<>();
 
         for (Map.Entry<Long, List<APIEmployeeInfoActionLog>> entry : actionLogMap.entrySet()) {
             List<APIEmployeeInfoActionLog> logs = entry.getValue();
 
-            ADSyncDto adSyncDto = new ADSyncDto();
+            ADEmployeeSyncDto adSyncDto = new ADEmployeeSyncDto();
             adSyncDto.setEmployeeNo(logs.get(0).getEmployeeNo());
 
             APIEmployeeInfo employeeInfo = employeeInfoRepository.findByEmployeeNo(logs.get(0).getEmployeeNo());
@@ -90,5 +91,12 @@ public class ADSyncServiceImpl implements ADSyncService {
             org.setOrgLevel((Integer) result[11]);
             return org;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ADOrganizationSyncDto> getADOrganizationSyncData(String baseDate) throws Exception {
+
+
+        return null;
     }
 }

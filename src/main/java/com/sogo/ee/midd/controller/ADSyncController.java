@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sogo.ee.midd.model.dto.ADSyncDto;
+import com.sogo.ee.midd.model.dto.ADEmployeeSyncDto;
 import com.sogo.ee.midd.service.ADSyncService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,24 +30,24 @@ public class ADSyncController {
 
     private final ADSyncService adSyncService;
 
-    @Operation(summary = "獲取 AD 同步數據", description = "此 API 端點返回所有 AD 同步數據的列表")
-    @ApiResponse(responseCode = "200", description = "成功檢索到 AD 同步數據")
-    @ApiResponse(responseCode = "204", description = "未找到 AD 同步數據")
+    @Operation(summary = "獲取 AD 員工同步數據", description = "此 API 端點返回所有 AD 員工同步數據的列表")
+    @ApiResponse(responseCode = "200", description = "成功檢索到 AD 員工同步數據")
+    @ApiResponse(responseCode = "204", description = "未找到 AD 員工同步數據")
     @ApiResponse(responseCode = "500", description = "伺服器內部錯誤")
-    @GetMapping("/ad-sync-data")
+    @GetMapping("/ad-employee-sync-data")
     public ResponseEntity<Object> getADSyncData(
-        @Parameter(description = "基準日期：日期之後的資料", schema = @Schema(type = "string", format = "date", example = "2024-09-25")) 
+        @Parameter(description = "基準日期：日期之後的資料", schema = @Schema(type = "string", format = "date", example = "2025-03-07")) 
 			@RequestParam(name = "base-date", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baseDate) {
         try {
-            List<ADSyncDto> adSyncData = adSyncService.getADSyncData(baseDate.toString());
-            if (adSyncData.isEmpty()) {
-                log.info("未找到 AD 同步數據");
+            List<ADEmployeeSyncDto> adEmployeeSyncData = adSyncService.getADEmployeeSyncData(baseDate.toString());
+            if (adEmployeeSyncData.isEmpty()) {
+                log.info("未找到 AD 員工同步數據");
                 return ResponseEntity.noContent().build();
             }
-            log.info("成功檢索到 AD 同步數據, 數量: {}", adSyncData.size());
-            return ResponseEntity.ok(adSyncData);
+            log.info("成功檢索到 AD 員工同步數據, 數量: {}", adEmployeeSyncData.size());
+            return ResponseEntity.ok(adEmployeeSyncData);
         } catch (Exception e) {
-            log.error("獲取 AD 同步數據時發生錯誤", e);
+            log.error("獲取 AD 員工同步數據時發生錯誤", e);
             return ResponseEntity.internalServerError().body("處理請求時發生錯誤: " + e.getMessage());
         }
     }
