@@ -13,7 +13,5 @@ import com.sogo.ee.midd.model.entity.APIEmployeeInfoActionLog;
 @Repository
 public interface ADSyncRepository extends JpaRepository<APIEmployeeInfoActionLog, Long> {
 
-    @Query("SELECT log FROM APIEmployeeInfoActionLog log " +
-       "WHERE function('to_char', log.createdDate, 'YYYY-MM-DD') = :date")
-    List<APIEmployeeInfoActionLog> findByCreatedDate(@Param("date")String createdDate);
+    
 }
