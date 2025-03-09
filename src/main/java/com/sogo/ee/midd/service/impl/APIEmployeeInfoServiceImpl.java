@@ -176,7 +176,8 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 		// 處理可能需要新增的資料
 		for (APIEmployeeInfo apiEmployeeInfo : createAPIEmployeeInfoList) {
 			tmpEmployInfoArchived = archivedRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
-			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndCreatedDate(apiEmployeeInfo.getEmployeeNo(), "C", createDate);
+			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndCreatedDate(apiEmployeeInfo.getEmployeeNo(),
+					"C", createDate);
 			if (tmpEmployInfoArchived == null && tmpActionLogList.isEmpty()) {
 				// employeeInfo.status=C, 確認 archived 中沒有資料, 代表需要新增 actionLog
 				tmpActionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "C", "employee_no", null,
@@ -191,7 +192,8 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 		// 處理可能需要更新的資料
 		for (APIEmployeeInfo apiEmployeeInfo : updateAPIEmployeeInfoList) {
 			tmpEmployInfoArchived = archivedRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
-			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndCreatedDate(apiEmployeeInfo.getEmployeeNo(), "U", createDate);
+			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndCreatedDate(apiEmployeeInfo.getEmployeeNo(),
+					"U", createDate);
 			if (tmpEmployInfoArchived != null && tmpActionLogList.isEmpty()) {
 				tmpActionLogList = new ArrayList<APIEmployeeInfoActionLog>();
 				// Action 確認為更新資料, 存入 actionLog
@@ -209,7 +211,8 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 		for (APIEmployeeInfo apiEmployeeInfo : deleteAPIEmployeeInfoList) {
 			// 代表第一次判斷 employeeInfo=D, 但在 emploeeInfoArchived 中已經有資料了
 			tmpEmployInfoArchived = archivedRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
-			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndCreatedDate(apiEmployeeInfo.getEmployeeNo(), "D", createDate);
+			tmpActionLogList = actionLogRepo.findByEmployeeNoAndActionAndCreatedDate(apiEmployeeInfo.getEmployeeNo(),
+					"D", createDate);
 			if (tmpEmployInfoArchived != null && tmpActionLogList.size() == 0) {
 				// Action 確認為刪除資料, 存入 actionLog, 紀錄 employee status, 2=留停, 3=離職
 				tmpActionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "D", "employee_no",
@@ -325,8 +328,9 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 			} else {
 				Field[] fields = APIEmployeeInfo.class.getDeclaredFields();
 				for (Field field : fields) {
-					// 忽略 id, status, dateOfBirth
-					if (field.getName().equals("id") || field.getName().equals("status") || field.getName().equals("dateOfBirth")) {
+					// 忽略 id, status, dateOfBirth createdDate
+					if (field.getName().equals("id") || field.getName().equals("status")
+							|| field.getName().equals("dateOfBirth") || field.getName().equals("createdDate")) {
 						continue;
 					}
 					field.setAccessible(true);
@@ -360,10 +364,12 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 						log.error("Error accessing field: " + field.getName(), e);
 					}
 				}
-				
+
 				// 若在職狀態不同, 則在 Action Log 中增加刪除資訊
-				if(!"1".equals(apiEmployeeInfo.getEmployedStatus()) && !apiEmployeeInfo.getEmployedStatus().equals(dbEmployeeInfo.getEmployedStatus())) {
-					APIEmployeeInfoActionLog actionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "D",
+				if (!"1".equals(apiEmployeeInfo.getEmployedStatus())
+						&& !apiEmployeeInfo.getEmployedStatus().equals(dbEmployeeInfo.getEmployedStatus())) {
+					APIEmployeeInfoActionLog actionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(),
+							"D",
 							"employedStatus", dbEmployeeInfo.getEmployedStatus(), apiEmployeeInfo.getEmployedStatus());
 					actionLogList.add(actionLog);
 				}
