@@ -36,6 +36,13 @@ public class Fse7enOrgDeptGradeInfo implements Serializable {
     /**
      * 等級編號
      */
+    @Column(name = "display_name")
+    private String displayName;
+
+    /**
+     * 等級編號
+     */
     @Column(name = "grade_num")
     private String gradeNum;
+
 } 
