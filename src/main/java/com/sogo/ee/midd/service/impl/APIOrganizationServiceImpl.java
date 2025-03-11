@@ -155,7 +155,7 @@ public class APIOrganizationServiceImpl implements APIOrganizationService {
             if (dbOrg == null) {
                 organizationRepo.save(apiOrg);
                 APIOrganizationActionLog actionLog = new APIOrganizationActionLog(apiOrg.getOrgCode(), "C",
-                        "org_code", null, apiOrg.getOrgCode());
+                        "orgCode", null, apiOrg.getOrgCode());
                 actionLogList.add(actionLog);
             } else {
 

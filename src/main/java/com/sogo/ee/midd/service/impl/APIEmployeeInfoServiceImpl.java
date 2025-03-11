@@ -366,7 +366,7 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 				}
 
 				// 若在職狀態不同, 則在 Action Log 中增加刪除資訊
-				if (!"1".equals(apiEmployeeInfo.getEmployedStatus())
+				if (!"1".equals(apiEmployeeInfo.getEmployedStatus()) && !"2".equals(apiEmployeeInfo.getEmployedStatus())
 						&& !apiEmployeeInfo.getEmployedStatus().equals(dbEmployeeInfo.getEmployedStatus())) {
 					APIEmployeeInfoActionLog actionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(),
 							"D",
