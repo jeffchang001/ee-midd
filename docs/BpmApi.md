@@ -6,6 +6,8 @@
 
 - **基礎 URL**: `/api/v1/bpm`
 - **內容類型**: `application/json`
+- **呼叫 Header Token**:
+  - "Authorization": "xxx"
 
 ## API 端點
 
@@ -26,10 +28,9 @@
   ```json
   [
     {
-      "deptCode": "string",
-      "deptName": "string",
-      "deptGrade": "string",
-      "deptLevel": "number"
+      "gradeId": "string",
+      "displayName": "string",
+      "gradeNum": "string"
     }
   ]
   ```
@@ -38,41 +39,31 @@
 
 #### 欄位說明
 
-| 欄位名稱  | 類型 | 描述     |
-| --------- | ---- | -------- |
-| deptCode  | 字串 | 部門代碼 |
-| deptName  | 字串 | 部門名稱 |
-| deptGrade | 字串 | 部門等級 |
-| deptLevel | 數字 | 部門層級 |
+| 欄位名稱    | 類型 | 描述                                   |
+| ----------- | ---- | -------------------------------------- |
+| gradeId     | 字串 | 部門層級代碼                           |
+| displayName | 字串 | 部門名稱                               |
+| gradeNum    | 字串 | 部門層級數值（整數），數字愈大層級愈高 |
 
 #### 樣本數據
 
 ```json
 [
-  {
-    "deptCode": "D001",
-    "deptName": "資訊科技部",
-    "deptGrade": "A",
-    "deptLevel": 1
-  },
-  {
-    "deptCode": "D002",
-    "deptName": "人力資源部",
-    "deptGrade": "A",
-    "deptLevel": 1
-  },
-  {
-    "deptCode": "D003",
-    "deptName": "財務部",
-    "deptGrade": "B",
-    "deptLevel": 2
-  },
-  {
-    "deptCode": "D004",
-    "deptName": "行銷部",
-    "deptGrade": "B",
-    "deptLevel": 2
-  }
+    {
+        "gradeId": "Level1",
+        "displayName": "第1階",
+        "gradeNum": "-1"
+    },
+    {
+        "gradeId": "Level2",
+        "displayName": "第2階",
+        "gradeNum": "-2"
+    },
+    {
+        "gradeId": "Level3",
+        "displayName": "第3階",
+        "gradeNum": "-3"
+    }
 ]
 ```
 
@@ -85,12 +76,12 @@ def get_all_dept_grade_info():
     url = "http://your-server/api/v1/bpm/dept-grade-info"
   
     headers = {
-        "Authorization": "Bearer fdjksa;312kOIJFfdsaASDWE123fdsa9012FDSAfdsa890FDSfdsa90FDSALfd890FDSfds8902FDJSL890fdFDSA890fdaFDSA890fdsaFDSA890fdsaFDSA890fdsFDSA890fdsaFDSA890"
+        "Authorization": "xxx"
     }
   
     try:
         response = requests.get(url, headers=headers)
-      
+  
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 204:
@@ -103,11 +94,6 @@ def get_all_dept_grade_info():
         print(f"請求異常: {str(e)}")
         return None
 
-# 使用範例
-dept_grade_info = get_all_dept_grade_info()
-if dept_grade_info:
-    for dept in dept_grade_info:
-        print(f"部門: {dept['deptName']}, 等級: {dept['deptGrade']}")
 ```
 
 ### 2. 獲取所有部門資訊
@@ -127,12 +113,8 @@ if dept_grade_info:
   ```json
   [
     {
-      "deptCode": "string",
-      "deptName": "string",
-      "deptShortName": "string",
-      "deptEnName": "string",
-      "deptEnShortName": "string",
-      "deptStatus": "string"
+      "orgCode": "string",
+      "orgName": "string"
     }
   ]
   ```
@@ -141,43 +123,27 @@ if dept_grade_info:
 
 #### 欄位說明
 
-| 欄位名稱        | 類型 | 描述         |
-| --------------- | ---- | ------------ |
-| deptCode        | 字串 | 部門代碼     |
-| deptName        | 字串 | 部門名稱     |
-| deptShortName   | 字串 | 部門簡稱     |
-| deptEnName      | 字串 | 部門英文名稱 |
-| deptEnShortName | 字串 | 部門英文簡稱 |
-| deptStatus      | 字串 | 部門狀態     |
+| 欄位名稱 | 類型 | 描述                                        |
+| -------- | ---- | ------------------------------------------- |
+| orgCode  | 字串 | 部門的唯一碼<br />部門編號（HrCode=DeptID） |
+| orgName  | 字串 | 給一般使用者看的名稱                        |
 
 #### 樣本數據
 
 ```json
 [
-  {
-    "deptCode": "D001",
-    "deptName": "資訊科技部",
-    "deptShortName": "IT部",
-    "deptEnName": "Information Technology Department",
-    "deptEnShortName": "IT Dept",
-    "deptStatus": "1"
-  },
-  {
-    "deptCode": "D002",
-    "deptName": "人力資源部",
-    "deptShortName": "HR部",
-    "deptEnName": "Human Resources Department",
-    "deptEnShortName": "HR Dept",
-    "deptStatus": "1"
-  },
-  {
-    "deptCode": "D003",
-    "deptName": "財務部",
-    "deptShortName": "財務部",
-    "deptEnName": "Finance Department",
-    "deptEnShortName": "Finance Dept",
-    "deptStatus": "1"
-  }
+    {
+        "orgCode": "100110011",
+        "orgName": "總公司"
+    },
+    {
+        "orgCode": "100111000",
+        "orgName": "董事會"
+    },
+    {
+        "orgCode": "100111100",
+        "orgName": "董事長室"
+    }
 ]
 ```
 
@@ -190,12 +156,12 @@ def get_all_dept_info():
     url = "http://your-server/api/v1/bpm/dept-info"
   
     headers = {
-        "Authorization": "Bearer fdjksa;312kOIJFfdsaASDWE123fdsa9012FDSAfdsa890FDSfdsa90FDSALfd890FDSfds8902FDJSL890fdFDSA890fdaFDSA890fdsaFDSA890fdsaFDSA890fdsFDSA890fdsaFDSA890"
+        "Authorization": "xxx"
     }
   
     try:
         response = requests.get(url, headers=headers)
-      
+  
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 204:
@@ -208,11 +174,6 @@ def get_all_dept_info():
         print(f"請求異常: {str(e)}")
         return None
 
-# 使用範例
-dept_info = get_all_dept_info()
-if dept_info:
-    for dept in dept_info:
-        print(f"部門: {dept['deptName']} ({dept['deptCode']})")
 ```
 
 ### 3. 獲取所有部門結構資訊
@@ -247,11 +208,11 @@ if dept_info:
 
 | 欄位名稱       | 類型 | 描述           |
 | -------------- | ---- | -------------- |
-| orgCode        | 字串 | 組織代碼       |
-| parentOrgCode  | 字串 | 父組織代碼     |
-| gradeId        | 字串 | 等級 ID        |
-| gradeNum       | 字串 | 等級數值       |
-| topOrgtreeCode | 字串 | 頂層組織樹代碼 |
+| orgCode        | 字串 | 部門識別碼     |
+| parentOrgCode  | 字串 | 上層部門識別碼 |
+| gradeId        | 字串 | 部門層級編號   |
+| gradeNum       | 字串 | 部門層級數值   |
+| topOrgtreeCode | 字串 | 最上層部門代碼 |
 
 #### 樣本數據
 
@@ -304,12 +265,12 @@ def get_all_dept_struct():
     url = "http://your-server/ee-midd/api/v1/bpm/dept-struct"
   
     headers = {
-        "Authorization": "Bearer fdjksa;312kOIJFfdsaASDWE123fdsa9012FDSAfdsa890FDSfdsa90FDSALfd890FDSfds8902FDJSL890fdFDSA890fdaFDSA890fdsaFDSA890fdsaFDSA890fdsFDSA890fdsaFDSA890"
+        "Authorization": "xxx"
     }
   
     try:
         response = requests.get(url, headers=headers)
-      
+  
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 204:
@@ -321,13 +282,6 @@ def get_all_dept_struct():
     except Exception as e:
         print(f"請求異常: {str(e)}")
         return None
-
-# 使用範例
-dept_struct = get_all_dept_struct()
-if dept_struct:
-    for struct in dept_struct:
-        parent = struct['parentOrgCode'] if struct['parentOrgCode'] else "無"
-        print(f"組織: {struct['orgCode']}, 父組織: {parent}, 等級: {struct['gradeId']}")
 ```
 
 ### 4. 獲取所有職稱對應等級資訊
@@ -347,7 +301,8 @@ if dept_struct:
   ```json
   [
     {
-      "jobTitle": "string",
+      "jobTitleCode": "string",
+      "jobTitleName": "string",
       "jobGrade": "string"
     }
   ]
@@ -357,47 +312,36 @@ if dept_struct:
 
 #### 欄位說明
 
-| 欄位名稱 | 類型 | 描述           |
-| -------- | ---- | -------------- |
-| jobTitle | 字串 | 職稱           |
-| jobGrade | 字串 | 職稱對應的等級 |
+| 欄位名稱     | 類型 | 描述                       |
+| ------------ | ---- | -------------------------- |
+| jobTitleCode | 字串 | 職稱的唯一碼               |
+| jobTitleName | 字串 | 給一般使用者看的名稱       |
+| jobGrade     | 字串 | 該職稱的等級(數字愈大愈大) |
 
 #### 樣本數據
 
 ```json
 [
-  {
-    "jobTitle": "總經理",
-    "jobGrade": "S1"
-  },
-  {
-    "jobTitle": "副總經理",
-    "jobGrade": "S2"
-  },
-  {
-    "jobTitle": "協理",
-    "jobGrade": "M1"
-  },
-  {
-    "jobTitle": "經理",
-    "jobGrade": "M2"
-  },
-  {
-    "jobTitle": "副理",
-    "jobGrade": "M3"
-  },
-  {
-    "jobTitle": "主任",
-    "jobGrade": "E1"
-  },
-  {
-    "jobTitle": "專員",
-    "jobGrade": "E2"
-  },
-  {
-    "jobTitle": "助理",
-    "jobGrade": "E3"
-  }
+    {
+        "jobTitleCode": "T00",
+        "jobTitleName": "實習生",
+        "jobGrade": "00"
+    },
+    {
+        "jobTitleCode": "P13",
+        "jobTitleName": "專案資深經理",
+        "jobGrade": "13"
+    },
+    {
+        "jobTitleCode": "P12",
+        "jobTitleName": "專案經理",
+        "jobGrade": "12"
+    },
+    {
+        "jobTitleCode": "P11",
+        "jobTitleName": "專案副理",
+        "jobGrade": "11"
+    }
 ]
 ```
 
@@ -410,12 +354,12 @@ def get_all_job_title_grade():
     url = "http://your-server/api/v1/bpm/job-title-grade"
   
     headers = {
-        "Authorization": "Bearer fdjksa;312kOIJFfdsaASDWE123fdsa9012FDSAfdsa890FDSfdsa90FDSALfd890FDSfds8902FDJSL890fdFDSA890fdaFDSA890fdsaFDSA890fdsaFDSA890fdsFDSA890fdsaFDSA890"
+        "Authorization": "xxx"
     }
   
     try:
         response = requests.get(url, headers=headers)
-      
+  
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 204:
@@ -428,11 +372,6 @@ def get_all_job_title_grade():
         print(f"請求異常: {str(e)}")
         return None
 
-# 使用範例
-job_title_grade = get_all_job_title_grade()
-if job_title_grade:
-    for job in job_title_grade:
-        print(f"職稱: {job['jobTitle']}, 等級: {job['jobGrade']}")
 ```
 
 ### 5. 獲取所有成員資訊
@@ -467,47 +406,47 @@ if job_title_grade:
 
 #### 欄位說明
 
-| 欄位名稱     | 類型 | 描述                        |
-| ------------ | ---- | --------------------------- |
-| employeeNo   | 字串 | 員工編號                    |
-| fullName     | 字串 | 員工全名                    |
-| extNo        | 字串 | 分機號碼                    |
-| emailAddress | 字串 | 電子郵件地址                |
-| isterminated | 字串 | 是否離職 (0:在職, 1:離職)   |
-| hireDate     | 日期 | 入職日期 (格式: yyyy-MM-dd) |
-| azureAccount | 字串 | Azure 帳號                  |
+| 欄位名稱     | 類型 | 描述                           |
+| ------------ | ---- | ------------------------------ |
+| employeeNo   | 字串 | 人員的唯一碼                   |
+| fullName     | 字串 | 人員顯示名稱(中文)             |
+| extNo        | 字串 | 分機號碼                       |
+| emailAddress | 字串 | 電子郵件                       |
+| isterminated | 字串 | 帳號是否可用 (0:停用, 1:啟用) |
+| hireDate     | 日期 | 到職日期 (格式: yyyy-MM-dd)    |
+| azureAccount | 字串 | Azure AD 帳號 (Email)          |
 
 #### 樣本數據
 
 ```json
 [
   {
-    "employeeNo": "E001",
-    "fullName": "張三",
-    "extNo": "1001",
-    "emailAddress": "zhang.san@example.com",
-    "isterminated": "0",
-    "hireDate": "2020-01-15",
-    "azureAccount": "zhang.san@azure.example.com"
-  },
-  {
-    "employeeNo": "E002",
-    "fullName": "李四",
-    "extNo": "1002",
-    "emailAddress": "li.si@example.com",
-    "isterminated": "0",
-    "hireDate": "2020-03-20",
-    "azureAccount": "li.si@azure.example.com"
-  },
-  {
-    "employeeNo": "E003",
-    "fullName": "王五",
-    "extNo": "1003",
-    "emailAddress": "wang.wu@example.com",
-    "isterminated": "1",
-    "hireDate": "2019-05-10",
-    "azureAccount": "wang.wu@azure.example.com"
-  }
+        "employeeNo": "004457",
+        "fullName": "陳彥樺",
+        "extNo": "2864",
+        "emailAddress": "004457@sogo.com.tw",
+        "isterminated": "0",
+        "hireDate": "2002-10-01",
+        "azureAccount": "004457@sogo.com.tw"
+    },
+    {
+        "employeeNo": "004466",
+        "fullName": "馮縱才",
+        "extNo": "500",
+        "emailAddress": "004466@sogo.com.tw",
+        "isterminated": "0",
+        "hireDate": "2002-10-09",
+        "azureAccount": "004466@sogo.com.tw"
+    },
+    {
+        "employeeNo": "004490",
+        "fullName": "蕭淑鑾",
+        "extNo": "1534",
+        "emailAddress": "004490@sogo.com.tw",
+        "isterminated": "0",
+        "hireDate": "2003-01-01",
+        "azureAccount": "004490@sogo.com.tw"
+    }
 ]
 ```
 
@@ -521,12 +460,12 @@ def get_all_member_info():
     url = "http://your-server/api/v1/bpm/member-info"
   
     headers = {
-        "Authorization": "Bearer fdjksa;312kOIJFfdsaASDWE123fdsa9012FDSAfdsa890FDSfdsa90FDSALfd890FDSfds8902FDJSL890fdFDSA890fdaFDSA890fdsaFDSA890fdsaFDSA890fdsFDSA890fdsaFDSA890"
+        "Authorization": "xxx"
     }
   
     try:
         response = requests.get(url, headers=headers)
-      
+  
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 204:
@@ -538,14 +477,6 @@ def get_all_member_info():
     except Exception as e:
         print(f"請求異常: {str(e)}")
         return None
-
-# 使用範例
-member_info = get_all_member_info()
-if member_info:
-    for member in member_info:
-        hire_date = datetime.strptime(member['hireDate'], '%Y-%m-%d').date()
-        status = "在職" if member['isterminated'] == "0" else "離職"
-        print(f"員工: {member['fullName']} ({member['employeeNo']}), 狀態: {status}, 入職日期: {hire_date}")
 ```
 
 ### 6. 獲取所有成員結構資訊
@@ -566,9 +497,15 @@ if member_info:
   [
     {
       "employeeNo": "string",
-      "deptCode": "string",
-      "jobTitle": "string",
-      "treeType": "string"
+      "orgCode": "string",
+      "fullName": "string",
+      "orgName": "string",
+      "jobTitleCode": "string",
+      "jobGrade": "string",
+      "isMainJob": "string",
+      "approveRight": "string",
+      "enable": "string",
+      "instructor": "string"
     }
   ]
   ```
@@ -577,47 +514,59 @@ if member_info:
 
 #### 欄位說明
 
-| 欄位名稱   | 類型 | 描述         |
-| ---------- | ---- | ------------ |
-| employeeNo | 字串 | 員工編號     |
-| deptCode   | 字串 | 部門代碼     |
-| jobTitle   | 字串 | 職稱         |
-| treeType   | 字串 | 樹狀結構類型 |
+| 欄位名稱     | 類型 | 描述                                              |
+| ------------ | ---- | ------------------------------------------------- |
+| employeeNo   | 字串 | 人員的唯一碼                                      |
+| orgCode      | 字串 | 部門的唯一碼                                      |
+| fullName     | 字串 | 人員名稱                                          |
+| orgName      | 字串 | 組織名稱                                          |
+| jobTitleCode | 字串 | 職稱的唯一碼                                      |
+| jobGrade     | 字串 | 職級                                              |
+| isMainJob    | 字串 | 是否專職 (1: 轉職 0: 兼職)                      |
+| approveRight | 字串 | 是否有簽核權 (1: 啟用  0: 停用)                   |
+| enable       | 字串 | 是否預設啟用(1:啟用 0:停用)                       |
+| instructor   | 字串 | ＊單線上級主管：簽核主管員編@該主管的實體組織代號 |
 
 #### 樣本數據
 
 ```json
 [
   {
-    "employeeNo": "E001",
-    "deptCode": "D001",
-    "jobTitle": "經理",
-    "treeType": "0"
-  },
-  {
-    "employeeNo": "E002",
-    "deptCode": "D001",
-    "jobTitle": "專員",
-    "treeType": "0"
-  },
-  {
-    "employeeNo": "E003",
-    "deptCode": "D002",
-    "jobTitle": "經理",
-    "treeType": "0"
-  },
-  {
-    "employeeNo": "E004",
-    "deptCode": "D002",
-    "jobTitle": "專員",
-    "treeType": "0"
-  },
-  {
-    "employeeNo": "E005",
-    "deptCode": "D003",
-    "jobTitle": "副理",
-    "treeType": "0"
-  }
+        "employeeNo": "005187",
+        "orgCode": "100114110",
+        "fullName": "魏琮祐",
+        "orgName": "人事課",
+        "jobTitleCode": "M11",
+        "jobGrade": "11",
+        "isMainJob": "1",
+        "approveRight": "1",
+        "enable": "1",
+        "instructor": "005704@100114100"
+    },
+    {
+        "employeeNo": "005187",
+        "orgCode": "100114120",
+        "fullName": "魏琮祐",
+        "orgName": "訓練發展課",
+        "jobTitleCode": "M11",
+        "jobGrade": "11",
+        "isMainJob": "0",
+        "approveRight": "1",
+        "enable": "1",
+        "instructor": "005704@100114100"
+    },
+    {
+        "employeeNo": "500138",
+        "orgCode": "100114130",
+        "fullName": "鍾怡君",
+        "orgName": "顧客服務中心",
+        "jobTitleCode": "M10",
+        "jobGrade": "10",
+        "isMainJob": "1",
+        "approveRight": "1",
+        "enable": "1",
+        "instructor": "005704@100114100"
+    }
 ]
 ```
 
@@ -630,12 +579,12 @@ def get_all_member_struct():
     url = "http://your-server/api/v1/bpm/member-struct"
   
     headers = {
-        "Authorization": "Bearer fdjksa;312kOIJFfdsaASDWE123fdsa9012FDSAfdsa890FDSfdsa90FDSALfd890FDSfds8902FDJSL890fdFDSA890fdaFDSA890fdsaFDSA890fdsaFDSA890fdsFDSA890fdsaFDSA890"
+        "Authorization": "xxx"
     }
   
     try:
         response = requests.get(url, headers=headers)
-      
+  
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 204:
@@ -647,12 +596,6 @@ def get_all_member_struct():
     except Exception as e:
         print(f"請求異常: {str(e)}")
         return None
-
-# 使用範例
-member_struct = get_all_member_struct()
-if member_struct:
-    for struct in member_struct:
-        print(f"員工編號: {struct['employeeNo']}, 部門: {struct['deptCode']}, 職稱: {struct['jobTitle']}")
 ```
 
 ### 7. 查詢實體化視圖變更資訊
@@ -665,7 +608,13 @@ if member_struct:
 - **URL**: `/api/v1/bpm/view-changes`
 - **參數**:
   - `date` (必填): 查詢日期，格式為 yyyy-MM-dd
-  - `view_name` (可選): 視圖名稱
+  - `view_name` (可選)，若沒有填就是該日期所有視圖全列: 視圖名稱列表
+    - fse7en_org_deptgradeinfo
+    - fse7en_org_deptinfo
+    - fse7en_org_deptstruct
+    - fse7en_org_jobtitle2grade
+    - fse7en_org_memberinfo
+    - fse7en_org_memberstruct
 
 #### 響應
 
@@ -699,74 +648,375 @@ if member_struct:
 
 #### 欄位說明
 
-| 欄位名稱                | 類型     | 描述                                 |
-| ----------------------- | -------- | ------------------------------------ |
-| viewName                | 字串     | 視圖名稱                             |
-| refreshedAt             | 日期時間 | 更新時間 (格式: yyyy-MM-dd HH:mm:ss) |
-| diffCount               | 數字     | 變更記錄數量                         |
-| diffDetails             | 陣列     | 變更詳細資訊陣列                     |
-| diffDetails[].key       | 對象     | 變更記錄的主鍵資訊                   |
-| diffDetails[].data      | 對象     | 變更記錄的資料內容                   |
-| diffDetails[].operation | 字串     | 操作類型 (INSERT, UPDATE, DELETE)    |
+| 欄位名稱                | 類型     | 描述                                           |
+| ----------------------- | -------- | ---------------------------------------------- |
+| viewName                | 字串     | 視圖名稱                                       |
+| refreshedAt             | 日期時間 | 更新時間 (格式: yyyy-MM-dd HH:mm:ss)           |
+| diffCount               | 數字     | 變更記錄數量                                   |
+| diffDetails             | 陣列     | 變更詳細資訊陣列                               |
+| diffDetails[].key       | 對象     | 變更記錄的主鍵資訊(不同 view 有不同主鍵)<br /> |
+| diffDetails[].data      | 對象     | 變更記錄的資料內容(依不同操作類型有不同結構)   |
+| diffDetails[].operation | 字串     | 操作類型 (INSERT, UPDATE, DELETE)              |
 
-#### 樣本數據
+[註]欄位說明部分比較不亦説明，請參考參考樣本數據比較好了解
+
+#### 樣本數據 - fse7en_org_deptgradeinfo
+
+```json
+[
+  {
+    "viewName": "fse7en_org_deptgradeinfo",
+    "refreshedAt": "2025-03-11 10:15:30",
+    "diffCount": 3,
+    "diffDetails": [
+      {
+        "key": {
+          "gradeId": "Level1"
+        },
+        "data": {
+          "gradeId": "Level1",
+          "displayName": "第1階",
+          "gradeNum": "-1"
+        },
+        "operation": "INSERT"
+      },
+      {
+        "key": {
+          "gradeId": "Level2"
+        },
+        "new": {
+          "gradeId": "Level2",
+          "displayName": "第2階",
+          "gradeNum": "-2"
+        },
+        "old": {
+          "gradeId": "Level2",
+          "displayName": "第8階",
+          "gradeNum": "-2"
+        },
+        "operation": "UPDATE"
+      },
+      {
+        "key": {
+          "gradeId": "Level3"
+        },
+        "data": {
+          "gradeId": "Level3",
+          "displayName": "第3階",
+          "gradeNum": "-3"
+        },
+        "operation": "DELETE"
+      }
+    ]
+  }
+]
+```
+
+#### 樣本數據 -fse7en_org_deptinfo
 
 ```json
 [
   {
     "viewName": "fse7en_org_deptinfo",
     "refreshedAt": "2025-03-11 10:15:30",
-    "diffCount": 2,
+    "diffCount": 3,
     "diffDetails": [
       {
         "key": {
-          "deptCode": "D006"
+          "orgCode": "100314110"
         },
         "data": {
-          "deptCode": "D006",
-          "deptName": "研發部",
-          "deptShortName": "研發",
-          "deptEnName": "Research and Development Department",
-          "deptEnShortName": "R&D Dept",
-          "deptStatus": "1"
+          "orgCode": "100314110",
+          "orgName": "總務課/復興"
         },
         "operation": "INSERT"
       },
       {
         "key": {
-          "deptCode": "D002"
+          "orgCode": "100213240"
         },
-        "data": {
-          "deptCode": "D002",
-          "deptName": "人力資源部",
-          "deptShortName": "HR部",
-          "deptEnName": "Human Resources Department",
-          "deptEnShortName": "HR Dept",
-          "deptStatus": "0"
+        "new": {
+          "orgCode": "100213240",
+          "orgName": "童裝內衣課/忠孝"
+        },
+        "old": {
+          "orgCode": "100213240",
+          "orgName": "內衣課/忠孝"
         },
         "operation": "UPDATE"
+      },
+      {
+        "key": {
+          "orgCode": "100213260"
+        },
+        "data": {
+          "orgCode": "100213260",
+          "orgName": "童裝課/忠孝"
+        },
+        "operation": "DELETE"
       }
     ]
-  },
+  }
+]
+```
+
+#### 樣本數據 -fse7en_org_deptstruct
+
+```json
+[
   {
-    "viewName": "fse7en_org_memberinfo",
-    "refreshedAt": "2025-03-11 10:20:45",
-    "diffCount": 1,
+    "viewName": "fse7en_org_deptstruct",
+    "refreshedAt": "2025-03-11 10:15:30",
+    "diffCount": 3,
     "diffDetails": [
       {
         "key": {
-          "employeeNo": "E010"
+          "orgCode": "100314110"
         },
         "data": {
-          "employeeNo": "E010",
-          "fullName": "趙六",
-          "extNo": "1010",
-          "emailAddress": "zhao.liu@example.com",
-          "isterminated": "0",
-          "hireDate": "2025-03-10",
-          "azureAccount": "zhao.liu@azure.example.com"
+          "gradeId": "Level8",
+          "orgCode": "100314110",
+          "gradeNum": "-8",
+          "parentOrgCode": "100314100",
+          "topOrgtreeCode": "100110011"
         },
         "operation": "INSERT"
+      },
+      {
+        "key": {
+          "orgCode": "100114200"
+        },
+        "new": {
+          "gradeId": "Level6",
+          "orgCode": "100114200",
+          "gradeNum": "-6",
+          "parentOrgCode": "100114000",
+          "topOrgtreeCode": "100110011"
+        },
+        "old": {
+          "gradeId": "Level5",
+          "orgCode": "100114200",
+          "gradeNum": "-5",
+          "parentOrgCode": "100111206",
+          "topOrgtreeCode": "100110011"
+        },
+        "operation": "UPDATE"
+      },
+      {
+        "key": {
+          "orgCode": "100213260"
+        },
+        "data": {
+          "gradeId": "Level8",
+          "orgCode": "100213260",
+          "gradeNum": "-8",
+          "parentOrgCode": "100213200",
+          "topOrgtreeCode": "100110011"
+        },
+        "operation": "DELETE"
+      }
+    ]
+  }
+]
+```
+
+#### 樣本數據 -fse7en_org_jobtitle2grade
+
+```json
+[
+  {
+    "viewName": "fse7en_org_jobtitle2grade",
+    "refreshedAt": "2025-03-11 10:15:30",
+    "diffCount": 3,
+    "diffDetails": [
+      {
+        "key": {
+          "jobTitleCode": "M13"
+        },
+        "data": {
+          "jobGrade": "13",
+          "jobTitleCode": "M13",
+          "jobTitleName": "資深主任工程師"
+        },
+        "operation": "INSERT"
+      },
+      {
+        "key": {
+          "jobTitleCode": "P11"
+        },
+        "new": {
+          "jobGrade": "11",
+          "jobTitleCode": "P11",
+          "jobTitleName": "專案副理"
+        },
+        "old": {
+          "jobGrade": "11",
+          "jobTitleCode": "P11",
+          "jobTitleName": "副理"
+        },
+        "operation": "UPDATE"
+      },
+      {
+        "key": {
+          "jobTitleCode": "T00"
+        },
+        "data": {
+          "jobGrade": "00",
+          "jobTitleCode": "T00",
+          "jobTitleName": "實習生"
+        },
+        "operation": "DELETE"
+      }
+    ]
+  }
+]
+```
+
+#### 樣本數據 -fse7en_org_memberinfo
+
+```json
+[
+  {
+    "viewName": "fse7en_org_memberinfo",
+    "refreshedAt": "2025-03-11 10:15:30",
+    "diffCount": 3,
+    "diffDetails": [
+      {
+        "key": {
+          "employeeNo": "007737"
+        },
+        "data": {
+          "extNo": "8547",
+          "fullName": "呂博寧",
+          "hireDate": "2024-11-05T00:00:00",
+          "employeeNo": "007737",
+          "azureaccount": "007737@sogo.com.tw",
+          "isterminated": "0",
+          "emailAddress": "007737@sogo.com.tw"
+        },
+        "operation": "INSERT"
+      },
+      {
+        "key": {
+          "employeeNo": "900388"
+        },
+        "new": {
+          "extNo": "6327",
+          "fullName": "鄧雅云",
+          "hireDate": "2021-10-20T00:00:00",
+          "employeeNo": "900388",
+          "azureaccount": "900388@sogo.com.tw",
+          "isterminated": "0",
+          "emailAddress": "900388@sogo.com.tw"
+        },
+        "old": {
+          "extNo": "6804",
+          "fullName": "鄧雅云",
+          "hireDate": "2021-10-20T00:00:00",
+          "employeeNo": "900388",
+          "azureaccount": "900388@sogo.com.tw",
+          "isterminated": "0",
+          "emailAddress": "900388@sogo.com.tw"
+        },
+        "operation": "UPDATE"
+      },
+      {
+        "key": {
+          "employeeNo": "007751"
+        },
+        "data": {
+          "extNo": "8731",
+          "fullName": "許宇青",
+          "hireDate": "2025-01-02T00:00:00",
+          "employeeNo": "007751",
+          "azureaccount": "007751@sogo.com.tw",
+          "isterminated": "0",
+          "emailAddress": "007751@sogo.com.tw"
+        },
+        "operation": "DELETE"
+      }
+    ]
+  }
+]
+```
+
+#### 樣本數據 -fse7en_org_memberstruct *複合主鍵
+
+```json
+[
+  {
+    "viewName": "fse7en_org_memberstruct",
+    "refreshedAt": "2025-03-11 10:15:30",
+    "diffCount": 3,
+    "diffDetails": [
+      {
+        "key": {
+          "orgCode": "100113100",
+          "employeeNo": "000065"
+        },
+        "data": {
+          "enable": "1",
+          "orgCode": "100113100",
+          "orgName": "營業管理室",
+          "fullName": "吳素吟",
+          "jobGrade": "17",
+          "instructor": "006253@100111205",
+          "employeeNo": "000065",
+          "isMainJob": "0",
+          "approveRight": "1",
+          "jobTitleCode": "M17"
+        },
+        "operation": "INSERT"
+      },
+      {
+        "key": {
+          "orgCode": "100112110",
+          "employeeNo": "004007"
+        },
+        "new": {
+          "enable": "1",
+          "orgCode": "100112110",
+          "orgName": "企劃課",
+          "fullName": "邱信宏",
+          "jobGrade": "12",
+          "instructor": "003295@100112100",
+          "employeeNo": "004007",
+          "isMainJob": "1",
+          "approveRight": "1",
+          "jobTitleCode": "M12"
+        },
+        "old": {
+          "enable": "1",
+          "orgCode": "100112110",
+          "orgName": "企劃課",
+          "fullName": "邱信宏",
+          "jobGrade": "11",
+          "instructor": "003295@100112100",
+          "employeeNo": "004007",
+          "isMainJob": "1",
+          "approveRight": "1",
+          "jobTitleCode": "M11"
+        },
+        "operation": "UPDATE"
+      },
+      {
+        "key": {
+          "orgCode": "100111201",
+          "employeeNo": "000004"
+        },
+        "data": {
+          "enable": "0",
+          "orgCode": "100111201",
+          "orgName": null,
+          "fullName": "李光榮",
+          "jobGrade": "130",
+          "instructor": null,
+          "employeeNo": "000004",
+          "isMainJob": "0",
+          "approveRight": "1",
+          "jobTitleCode": "130"
+        },
+        "operation": "DELETE"
       }
     ]
   }
@@ -783,7 +1033,7 @@ def get_view_changes_by_date(date, view_name=None):
     url = "http://your-server/api/v1/bpm/view-changes"
   
     headers = {
-        "Authorization": "Bearer fdjksa;312kOIJFfdsaASDWE123fdsa9012FDSAfdsa890FDSfdsa90FDSALfd890FDSfds8902FDJSL890fdFDSA890fdaFDSA890fdsaFDSA890fdsaFDSA890fdsFDSA890fdsaFDSA890"
+        "Authorization": "xxx"
     }
   
     params = {
@@ -795,7 +1045,7 @@ def get_view_changes_by_date(date, view_name=None):
   
     try:
         response = requests.get(url, params=params, headers=headers)
-      
+  
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 204:
@@ -809,18 +1059,12 @@ def get_view_changes_by_date(date, view_name=None):
         return None
 
 # 使用範例
-# 查詢特定日期的所有視圖變更
-all_changes = get_view_changes_by_date("2025-03-11")
-if all_changes:
-    for change in all_changes:
-        print(f"視圖: {change['viewName']}, 更新時間: {change['refreshedAt']}, 變更數量: {change['diffCount']}")
-
 # 查詢特定日期和視圖的變更
 specific_changes = get_view_changes_by_date("2025-03-11", "fse7en_org_memberstruct")
 if specific_changes:
     for change in specific_changes:
         print(f"視圖: {change['viewName']}, 更新時間: {change['refreshedAt']}, 變更數量: {change['diffCount']}")
-      
+  
         # 處理變更詳細資訊
         if change['diffDetails'] and len(change['diffDetails']) > 0:
             for diff in change['diffDetails'][:5]:  # 只顯示前5筆變更

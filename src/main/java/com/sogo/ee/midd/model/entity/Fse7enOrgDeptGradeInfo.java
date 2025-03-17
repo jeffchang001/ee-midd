@@ -5,9 +5,9 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Table;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Subselect;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,7 +21,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "fse7en_org_deptgradeinfo")
+@Immutable
+@Subselect("SELECT * FROM fse7en_org_deptgradeinfo")
 public class Fse7enOrgDeptGradeInfo implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -45,4 +46,4 @@ public class Fse7enOrgDeptGradeInfo implements Serializable {
     @Column(name = "grade_num")
     private String gradeNum;
 
-} 
+}

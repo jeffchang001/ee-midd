@@ -38,3 +38,9 @@ build/
 
 ### mac os ###
 .DS_Store
+
+### Docker ###
+.env
+*.env
+.env.*
+docker-compose.override.yml

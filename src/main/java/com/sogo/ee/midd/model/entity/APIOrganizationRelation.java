@@ -84,6 +84,6 @@ public class APIOrganizationRelation {
     private String status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "OrgCode", insertable = false, updatable = false)
+    @JoinColumn(name = "OrgCode", referencedColumnName = "OrgCode", insertable = false, updatable = false)
     private APIOrganization organization;
 }

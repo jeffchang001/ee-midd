@@ -26,11 +26,11 @@ public class APICompany {
     private Long id;
 
     @JsonProperty("CompanyCode")
-    @Column(name = "CompanyCode")
+    @Column(name = "CompanyCode", length = 20)
     private String companyCode;
 
     @JsonProperty("CompanyName")
-    @Column(name = "CompanyName")
+    @Column(name = "CompanyName", length = 30)
     private String companyName;
 
     @JsonProperty("EffectiveDate")

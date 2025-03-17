@@ -1,15 +1,18 @@
 package com.sogo.ee.midd.model.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
-import javax.persistence.Table;
-import java.io.Serializable;
+
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Subselect;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 成員結構資訊實體類
@@ -19,7 +22,8 @@ import java.io.Serializable;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "fse7en_org_memberstruct")
+@Immutable
+@Subselect("SELECT * FROM fse7en_org_memberstruct")
 @IdClass(Fse7enOrgMemberStructId.class)
 public class Fse7enOrgMemberStruct implements Serializable {
 
@@ -86,4 +90,4 @@ public class Fse7enOrgMemberStruct implements Serializable {
      */
     @Column(name = "instructor")
     private String instructor;
-} 
+}
