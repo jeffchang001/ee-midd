@@ -1,5 +1,6 @@
 package com.sogo.ee.midd.model.entity;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import javax.persistence.Column;
@@ -23,7 +24,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Table(name = "api_organization_relation") // 假設您的數據庫表名稱為 api_organization_relation
-public class APIOrganizationRelation {
+public class APIOrganizationRelation implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
