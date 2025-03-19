@@ -15,14 +15,14 @@ services:
     volumes:
       - ~/apps/postgres16.8:/var/lib/postgresql/data
 
-  postgres14:
-    image: postgres:14-alpine
-    container_name: postgres-14-db
-    ports:
-      - "5432:5432"
-    volumes:
-      - ~/apps/postgres:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=ee_midd
+  # postgres14:
+  #   image: postgres:14-alpine
+  #   container_name: postgres-14-db
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - ~/apps/postgres:/var/lib/postgresql/data
+  #   environment:
+  #     - POSTGRES_PASSWORD=postgres
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_DB=ee_midd

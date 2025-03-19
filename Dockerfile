@@ -16,4 +16,4 @@ ENV SPRING_PROFILES_ACTIVE=prod
 # 暴露應用程式端口
 EXPOSE 8080
 # 啟動應用程式
-ENTRYPOINT ["java", "-jar", "app.jar"] 
+ENTRYPOINT ["java", "-jar", "app.jar"]

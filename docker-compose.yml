@@ -1,11 +1,10 @@
-version: '3.8'
-
 services:
   ee-midd:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: ee-midd
+    restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
@@ -20,8 +19,8 @@ services:
       - SPRING_THYMELEAF_PREFIX=classpath:/templates/
       - SPRING_THYMELEAF_SUFFIX=.html
       
-      # PostgreSQL 資料庫連線設定
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ee_midd
+      # PostgreSQL 資料庫連線設定 - 使用主機網絡連接
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5433/ee_midd?TimeZone=Asia/Taipei
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
@@ -71,4 +70,13 @@ services:
       - JWT_SECRET=${JWT_SECRET:-fdjksa;312kOIJFfdsaASDWE123fdsa9012FDSAfdsa890FDSfdsa90FDSALfd890FDSfds8902FDJSL890fdFDSA890fdaFDSA890fdsaFDSA890fdsaFDSA890fdsFDSA890fdsaFDSA890}
     volumes:
       - ./logs:/app/logs
-    restart: unless-stopped 
+    # 添加網絡設定
+    networks:
+      - ee_midd_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+# 定義網絡
+networks:
+  ee_midd_network:
+    driver: bridge 

@@ -2,12 +2,14 @@ package com.sogo.ee.midd.controller;
 
 import com.sogo.ee.midd.model.dto.Fse7enOrgMemberInfoDto;
 import com.sogo.ee.midd.model.dto.MaterializedViewChangeDto;
+import com.sogo.ee.midd.model.entity.EmployeeApprovalAmount;
 import com.sogo.ee.midd.model.entity.Fse7enOrgDeptGradeInfo;
 import com.sogo.ee.midd.model.entity.Fse7enOrgDeptInfo;
 import com.sogo.ee.midd.model.entity.Fse7enOrgDeptStruct;
 import com.sogo.ee.midd.model.entity.Fse7enOrgJobTitle2Grade;
 import com.sogo.ee.midd.model.entity.Fse7enOrgMemberInfo;
 import com.sogo.ee.midd.model.entity.Fse7enOrgMemberStruct;
+import com.sogo.ee.midd.service.EmployeeApprovalAmountService;
 import com.sogo.ee.midd.service.Fse7enOrgDeptGradeInfoService;
 import com.sogo.ee.midd.service.Fse7enOrgDeptInfoService;
 import com.sogo.ee.midd.service.Fse7enOrgDeptStructService;
@@ -27,12 +29,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * BPM API 控制器
@@ -52,6 +56,7 @@ public class BpmApiController {
     private final Fse7enOrgMemberInfoService memberInfoService;
     private final Fse7enOrgMemberStructService memberStructService;
     private final MaterializedViewChangeService materializedViewChangeService;
+    private final EmployeeApprovalAmountService employeeApprovalAmountService;
 
     /**
      * 獲取所有部門等級資訊
@@ -240,6 +245,36 @@ public class BpmApiController {
             return ResponseEntity.ok(changesList);
         } catch (Exception e) {
             log.error("查詢實體化視圖變更資訊時發生錯誤", e);
+            return ResponseEntity.internalServerError().body("處理請求時發生錯誤: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 獲取員工審批金額信息，支援全查或根據員工編號查詢
+     *
+     * @param employeeNo 員工編號 (可選)
+     * @return 員工審批金額信息
+     */
+    @Operation(
+        summary = "獲取員工審批金額信息", 
+        description = "此 API 端點返回員工審批金額信息，若未提供員工編號則返回所有資料，否則返回特定員工的資料"
+    )
+    @ApiResponse(responseCode = "200", description = "成功檢索到員工審批金額信息")
+    @ApiResponse(responseCode = "204", description = "未找到員工審批金額信息")
+    @ApiResponse(responseCode = "500", description = "伺服器內部錯誤")
+    @GetMapping({"/approval-amounts"})
+    public ResponseEntity<Object> getApprovalAmounts() {
+        try {
+            log.info("未提供員工編號，返回所有員工審批金額信息");
+                List<EmployeeApprovalAmount> amountsList = employeeApprovalAmountService.findAll();
+                if (amountsList.isEmpty()) {
+                    log.info("未找到員工審批金額信息");
+                    return ResponseEntity.noContent().build();
+                }
+                log.info("成功檢索到員工審批金額信息, 數量: {}", amountsList.size());
+                return ResponseEntity.ok(amountsList);
+        } catch (Exception e) {
+            log.error("獲取員工審批金額信息時發生錯誤", e);
             return ResponseEntity.internalServerError().body("處理請求時發生錯誤: " + e.getMessage());
         }
     }
