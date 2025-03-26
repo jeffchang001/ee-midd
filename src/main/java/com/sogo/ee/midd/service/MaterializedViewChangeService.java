@@ -18,4 +18,9 @@ public interface MaterializedViewChangeService {
      * @return 實體化視圖變更資訊列表
      */
     List<MaterializedViewChangeDto> getViewChangesByDate(LocalDate date, String viewName);
+
+    /**
+     * 重新整理所有的 materialized views
+     */
+    void refreshAllMaterializedViews();
 } 

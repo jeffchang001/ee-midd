@@ -30,6 +30,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -250,32 +251,60 @@ public class BpmApiController {
     }
 
     /**
-     * 獲取員工審批金額信息，支援全查或根據員工編號查詢
+     * 獲取所有員工審批金額信息
+     * 
+     * 返回信息包括：
+     * - 員工基本信息（工號、姓名、職稱）
+     * - 組織信息（簽核單位、實體單位、層級）
+     * - 審批金額上限（費用、資本支出、罰款、關係企業款項等）
      *
-     * @param employeeNo 員工編號 (可選)
-     * @return 員工審批金額信息
+     * @return 員工審批金額信息列表
      */
     @Operation(
-        summary = "獲取員工審批金額信息", 
-        description = "此 API 端點返回員工審批金額信息，若未提供員工編號則返回所有資料，否則返回特定員工的資料"
+        summary = "獲取所有員工審批金額信息", 
+        description = "此 API 端點返回所有員工審批金額信息的列表，包含各種類型審批金額上限"
     )
     @ApiResponse(responseCode = "200", description = "成功檢索到員工審批金額信息")
     @ApiResponse(responseCode = "204", description = "未找到員工審批金額信息")
     @ApiResponse(responseCode = "500", description = "伺服器內部錯誤")
-    @GetMapping({"/approval-amounts"})
-    public ResponseEntity<Object> getApprovalAmounts() {
+    @GetMapping("/approval-amounts")
+    public ResponseEntity<Object> getAllApprovalAmounts() {
         try {
-            log.info("未提供員工編號，返回所有員工審批金額信息");
-                List<EmployeeApprovalAmount> amountsList = employeeApprovalAmountService.findAll();
-                if (amountsList.isEmpty()) {
-                    log.info("未找到員工審批金額信息");
-                    return ResponseEntity.noContent().build();
-                }
-                log.info("成功檢索到員工審批金額信息, 數量: {}", amountsList.size());
-                return ResponseEntity.ok(amountsList);
+            log.info("查詢所有員工審批金額信息");
+            List<EmployeeApprovalAmount> amountsList = employeeApprovalAmountService.findAll();
+            if (amountsList.isEmpty()) {
+                log.info("未找到員工審批金額信息");
+                return ResponseEntity.noContent().build();
+            }
+            log.info("成功檢索到員工審批金額信息, 數量: {}", amountsList.size());
+            return ResponseEntity.ok(amountsList);
         } catch (Exception e) {
             log.error("獲取員工審批金額信息時發生錯誤", e);
             return ResponseEntity.internalServerError().body("處理請求時發生錯誤: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 重新整理所有的 materialized views
+     * 
+     * @return 重新整理結果
+     */
+    @Operation(
+        summary = "重新整理所有的 materialized views",
+        description = "此 API 端點會呼叫 refresh_all_materialized_views() 函數來重新整理所有的 materialized views"
+    )
+    @ApiResponse(responseCode = "200", description = "成功重新整理所有 materialized views")
+    @ApiResponse(responseCode = "500", description = "重新整理過程中發生錯誤")
+    @PostMapping("/refresh-views")
+    public ResponseEntity<Object> refreshAllMaterializedViews() {
+        try {
+            log.info("開始重新整理所有 materialized views");
+            materializedViewChangeService.refreshAllMaterializedViews();
+            log.info("成功重新整理所有 materialized views");
+            return ResponseEntity.ok("成功重新整理所有 materialized views");
+        } catch (Exception e) {
+            log.error("重新整理 materialized views 時發生錯誤", e);
+            return ResponseEntity.internalServerError().body("重新整理 materialized views 失敗: " + e.getMessage());
         }
     }
 } 

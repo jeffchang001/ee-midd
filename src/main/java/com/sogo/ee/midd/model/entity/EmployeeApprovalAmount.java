@@ -41,6 +41,9 @@ public class EmployeeApprovalAmount {
     @Column(name = "layer_name")
     private String layerName;
 
+    @Column(name = "layer_description")
+    private String layerDescription;
+
     @Column(name = "form_org_code")
     private String formOrgCode;
 
@@ -59,6 +62,21 @@ public class EmployeeApprovalAmount {
     @Column(name = "max_capital_fee")
     private BigDecimal maxCapitalFee;
 
-    @Column(name = "max_payment_request_fee")
-    private BigDecimal maxPaymentRequestFee;
+    @Column(name = "max_payment_penalty_fee")
+    private BigDecimal maxPaymentPenaltyFee;
+
+    @Column(name = "max_payment_relation_fee")
+    private BigDecimal maxPaymentRelationFee;
+
+    @Column(name = "max_payment_current_capital_fee")
+    private BigDecimal maxPaymentCurrentCapitalFee;
+
+    @Column(name = "max_payment_regular_expense_fee")
+    private BigDecimal maxPaymentRegularExpenseFee;
+
+    @Column(name = "max_payment_other_capital_fee")
+    private BigDecimal maxPaymentOtherCapitalFee;
+
+    @Column(name = "max_payment_other_expense_fee")
+    private BigDecimal maxPaymentOtherExpenseFee;
 } 

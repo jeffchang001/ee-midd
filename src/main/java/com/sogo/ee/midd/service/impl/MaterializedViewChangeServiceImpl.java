@@ -2,12 +2,16 @@ package com.sogo.ee.midd.service.impl;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Iterator;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,6 +33,9 @@ public class MaterializedViewChangeServiceImpl implements MaterializedViewChange
 
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     /**
      * 根據日期和視圖名稱查詢實體化視圖變更資訊
@@ -89,7 +96,7 @@ public class MaterializedViewChangeServiceImpl implements MaterializedViewChange
         try {
             // 嘗試解析為 JsonNode
             JsonNode jsonNode = objectMapper.readTree(jsonStr);
-            
+
             // 轉換為駝峰式命名法
             if (jsonNode.isObject()) {
                 return convertObjectToCamelCase((ObjectNode) jsonNode);
@@ -98,8 +105,8 @@ public class MaterializedViewChangeServiceImpl implements MaterializedViewChange
                 for (int i = 0; i < jsonNode.size(); i++) {
                     JsonNode element = jsonNode.get(i);
                     if (element.isObject()) {
-                        ((com.fasterxml.jackson.databind.node.ArrayNode) jsonNode).set(i, 
-                            convertObjectToCamelCase((ObjectNode) element));
+                        ((com.fasterxml.jackson.databind.node.ArrayNode) jsonNode).set(i,
+                                convertObjectToCamelCase((ObjectNode) element));
                     }
                 }
                 return objectMapper.treeToValue(jsonNode, Object.class);
@@ -120,7 +127,7 @@ public class MaterializedViewChangeServiceImpl implements MaterializedViewChange
             throw e;
         }
     }
-    
+
     /**
      * 將 ObjectNode 的屬性名稱轉換為駝峰式命名法
      *
@@ -130,15 +137,15 @@ public class MaterializedViewChangeServiceImpl implements MaterializedViewChange
     private ObjectNode convertObjectToCamelCase(ObjectNode objectNode) throws IOException {
         ObjectNode result = objectMapper.createObjectNode();
         Iterator<Map.Entry<String, JsonNode>> fields = objectNode.fields();
-        
+
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> entry = fields.next();
             String key = entry.getKey();
             JsonNode value = entry.getValue();
-            
+
             // 轉換屬性名稱為駝峰式命名法
             String camelCaseKey = toCamelCase(key);
-            
+
             // 遞迴處理嵌套對象
             if (value.isObject()) {
                 result.set(camelCaseKey, convertObjectToCamelCase((ObjectNode) value));
@@ -159,10 +166,10 @@ public class MaterializedViewChangeServiceImpl implements MaterializedViewChange
                 result.set(camelCaseKey, value);
             }
         }
-        
+
         return result;
     }
-    
+
     /**
      * 將下劃線命名法轉換為駝峰式命名法
      *
@@ -173,13 +180,13 @@ public class MaterializedViewChangeServiceImpl implements MaterializedViewChange
         if (underscoreStr == null || underscoreStr.isEmpty()) {
             return underscoreStr;
         }
-        
+
         StringBuilder result = new StringBuilder();
         boolean nextUpper = false;
-        
+
         for (int i = 0; i < underscoreStr.length(); i++) {
             char c = underscoreStr.charAt(i);
-            
+
             if (c == '_') {
                 nextUpper = true;
             } else {
@@ -191,7 +198,20 @@ public class MaterializedViewChangeServiceImpl implements MaterializedViewChange
                 }
             }
         }
-        
+
         return result.toString();
+    }
+
+    @Override
+    @Transactional
+    public void refreshAllMaterializedViews() {
+        log.info("開始重新整理所有 materialized views");
+        try {
+            jdbcTemplate.execute("SELECT refresh_all_materialized_views()");
+            log.info("成功重新整理所有 materialized views");
+        } catch (Exception e) {
+            log.error("重新整理 materialized views 時發生錯誤", e);
+            throw new RuntimeException("重新整理 materialized views 失敗", e);
+        }
     }
 }
