@@ -1268,6 +1268,7 @@ ALTER TABLE public.fse7en_org_memberinfo OWNER TO postgres;
 -- Name: fse7en_org_memberstruct; Type: MATERIALIZED VIEW; Schema: public; Owner: postgres
 --
 
+
 CREATE MATERIALIZED VIEW public.fse7en_org_memberstruct AS
 WITH employee_managers AS (
     -- 1. 取得員工基本資料和表單單位的主管
@@ -1283,7 +1284,7 @@ WITH employee_managers AS (
         -- 先找該員工所屬表單單位的主管
         (SELECT aom.employee_no 
          FROM api_organization_manager aom 
-         WHERE aom.org_code = aei.form_org_code 
+         WHERE aom.org_code = aei.form_org_code order by aom.effective_date desc
          LIMIT 1) AS direct_manager_employee_no,
         -- 找出上層單位代碼
         (SELECT aor.parent_org_code 
@@ -1312,7 +1313,7 @@ employee_with_approve_right AS (
             WHEN em.direct_manager_employee_no = em.employee_no AND em.parent_org_code IS NOT NULL THEN
                 (SELECT aom.employee_no 
                  FROM api_organization_manager aom 
-                 WHERE aom.org_code = em.parent_org_code 
+                 WHERE aom.org_code = em.parent_org_code order by aom.effective_date desc
                  LIMIT 1)
             ELSE NULL
         END AS approval_manager_employee_no
@@ -1320,13 +1321,19 @@ employee_with_approve_right AS (
 )
 -- 最終結果
 SELECT 
+    DISTINCT
     aei.employee_no,
     aei.full_name,
     aei.formula_org_code AS org_code,
-    ao.org_name,
+    aei.formula_org_name AS org_name,
     aei.job_title_code,
     regexp_replace(aei.job_title_code::character varying::text, '[A-Za-z]', '', 'g') AS job_grade,
-    '1' AS is_main_job,  -- 假設所有職位都是主要職位
+    CASE
+        -- is_main_job 邏輯更新: 檢查 ManagerRoleType 是否為 '1' 或 ''
+        WHEN aom.manager_role_type IS NULL THEN '1'  -- 如果沒有找到記錄，預設為主要職位
+        WHEN aom.manager_role_type = '1' OR aom.manager_role_type = '' THEN '1'
+        ELSE '0'
+    END AS is_main_job,
     CASE 
         -- 如果員工是某人的審批主管，則設為 1
         WHEN EXISTS (
@@ -1339,7 +1346,7 @@ SELECT
         WHEN aei.employed_status = '1' THEN '1'
         ELSE '0'
     END AS enable,
-    (SELECT (ewar.approval_manager_employee_no::text || '@' || a2.form_org_code::text)
+    (SELECT (ewar.approval_manager_employee_no::text || '@' || a2.formula_org_code::text)
      FROM employee_with_approve_right ewar
      JOIN api_employee_info a2 ON ewar.approval_manager_employee_no = a2.employee_no
      WHERE ewar.employee_no = aei.employee_no
@@ -1347,9 +1354,11 @@ SELECT
 FROM 
     api_employee_info aei
 LEFT JOIN 
+    api_organization_manager aom ON aei.employee_no = aom.employee_no
+LEFT JOIN 
     api_organization ao ON aei.form_org_code = ao.org_code
 ORDER BY 
-    aei.form_org_code
+    aei.employee_no
 WITH NO DATA;
 
 
@@ -1643,7 +1652,7 @@ ALTER TABLE public.approved_amount_for_each_layer OWNER TO postgres;
 
 insert into public.approved_amount_for_each_layer values('0', '董事長', 999999999, 999999999, 999999999, 999999999, 0, 0, 999999999, 999999999);
 insert into public.approved_amount_for_each_layer values('1', '總經理', 5000000, 2500000, 2500000, 300000, 0, 0, 5000000, 2500000);
-insert into public.approved_amount_for_each_layer values('2', '本部主管', 1000000, 500000, 500000, 500000, 0, 0, 1000000, 500000);
+insert into public.approved_amount_for_each_layer values('2', '本部主管', 1000000, 500000, 500000, 50000, 0, 0, 1000000, 500000);
 insert into public.approved_amount_for_each_layer values('3', '店內店長主管.總公司部級主管', 500000, 250000, 100000, 20000, 999999999, 999999999, 500000, 250000);
 insert into public.approved_amount_for_each_layer values('4', '店內部級主管.總公司課級主管', 100000, 50000, 20000, 10000, 200000, 100000, 100000, 50000);
 insert into public.approved_amount_for_each_layer values('5', '店內課級主管', 0, 10000, 0, 0, 0, 20000, 0, 10000);
