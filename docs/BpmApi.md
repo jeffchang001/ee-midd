@@ -648,15 +648,15 @@ def get_all_member_struct():
 
 #### 欄位說明
 
-| 欄位名稱                | 類型     | 描述                                           |
-| ----------------------- | -------- | ---------------------------------------------- |
-| viewName                | 字串     | 視圖名稱                                       |
-| refreshedAt             | 日期時間 | 更新時間 (格式: yyyy-MM-dd HH:mm:ss)           |
-| diffCount               | 數字     | 變更記錄數量                                   |
-| diffDetails             | 陣列     | 變更詳細資訊陣列                               |
-| diffDetails[].key       | 對象     | 變更記錄的主鍵資訊(不同 view 有不同主鍵)<br /> |
-| diffDetails[].data      | 對象     | 變更記錄的資料內容(依不同操作類型有不同結構)   |
-| diffDetails[].operation | 字串     | 操作類型 (INSERT, UPDATE, DELETE)              |
+| 欄位名稱                | 類型     | 描述                                         |
+| ----------------------- | -------- | -------------------------------------------- |
+| viewName                | 字串     | 視圖名稱                                     |
+| refreshedAt             | 日期時間 | 更新時間 (格式: yyyy-MM-dd HH:mm:ss)         |
+| diffCount               | 數字     | 變更記錄數量                                 |
+| diffDetails             | 陣列     | 變更詳細資訊陣列                             |
+| diffDetails[].key       | 對象     | 變更記錄的主鍵資訊(不同 view 有不同主鍵)     |
+| diffDetails[].data      | 對象     | 變更記錄的資料內容(依不同操作類型有不同結構) |
+| diffDetails[].operation | 字串     | 操作類型 (INSERT, UPDATE, DELETE)            |
 
 [註]欄位說明部分比較不亦説明，請參考參考樣本數據比較好了解
 
@@ -1072,4 +1072,156 @@ if specific_changes:
                 print(f"主鍵: {diff['key']}")
                 print(f"資料: {diff['data']}")
                 print("---") 
+```
+
+### 8. 獲取所有員工審批金額資訊
+
+獲取系統中所有員工的審批金額上限資訊，包含各種類型的審批權限。
+
+#### 請求
+
+- **方法**: `GET`
+- **URL**: `/api/v1/bpm/approval-amounts`
+- **參數**: 無
+
+#### 響應
+
+- **成功響應 (200 OK)**:
+
+  ```json
+  [
+    {
+      "employeeNo": "string",
+      "fullName": "string",
+      "jobTitleCode": "string",
+      "jobTitleName": "string",
+      "layerCode": "string",
+      "layerName": "string",
+      "layerDescription": "string",
+      "formOrgCode": "string",
+      "formOrgName": "string",
+      "formulaOrgCode": "string",
+      "formulaOrgName": "string",
+      "maxExpenseFee": number,
+      "maxCapitalFee": number,
+      "maxPaymentPenaltyFee": number,
+      "maxPaymentRelationFee": number,
+      "maxPaymentCurrentCapitalFee": number,
+      "maxPaymentRegularExpenseFee": number,
+      "maxPaymentOtherCapitalFee": number,
+      "maxPaymentOtherExpenseFee": number
+    }
+  ]
+  ```
+- **無內容 (204 No Content)**: 未找到員工審批金額資訊
+- **伺服器錯誤 (500 Internal Server Error)**: 處理請求時發生錯誤
+
+#### 欄位說明
+
+| 欄位名稱                    | 類型 | 描述                        |
+| --------------------------- | ---- | --------------------------- |
+| employeeNo                  | 字串 | 員工編號                    |
+| fullName                    | 字串 | 員工姓名                    |
+| jobTitleCode                | 字串 | 職稱代號                    |
+| jobTitleName                | 字串 | 職稱名稱                    |
+| layerCode                   | 字串 | 階層代碼-階層               |
+| layerName                   | 字串 | 階層名稱                    |
+| layerDescription            | 字串 | 階層說明                    |
+| formOrgCode                 | 字串 | 簽核組織代號                |
+| formOrgName                 | 字串 | 簽核組織名稱                |
+| formulaOrgCode              | 字串 | 實體組織代號                |
+| formulaOrgName              | 字串 | 實體組織名稱                |
+| maxExpenseFee               | 數字 | 核定費用上限                |
+| maxCapitalFee               | 數字 | 核定資本額上限              |
+| maxPaymentPenaltyFee        | 數字 | 核定付款上限-罰款訴訟       |
+| maxPaymentRelationFee       | 數字 | 核定付款上限-公關交際捐贈   |
+| maxPaymentCurrentCapitalFee | 數字 | 核定付款-公用核定經常(資本) |
+| maxPaymentRegularExpenseFee | 數字 | 核定付款-公用核定經常(費用) |
+| maxPaymentOtherCapitalFee   | 數字 | 核定付款-其他(資本)         |
+| maxPaymentOtherExpenseFee   | 數字 | 核定付款-其他(費用)樣本數據 |
+
+```json
+[
+  {
+    "employeeNo": "004521",
+    "fullName": "王大明",
+    "jobTitleCode": "M17",
+    "jobTitleName": "資深協理",
+    "layerCode": "2",
+    "layerName": "本部主管",
+    "layerDescription": "本部主管",
+    "formOrgCode": "100112300",
+    "formOrgName": "人力資源部",
+    "formulaOrgCode": "100112300",
+    "formulaOrgName": "人力資源部",
+    "maxExpenseFee": 500000.00,
+    "maxCapitalFee": 1000000.00,
+    "maxPaymentPenaltyFee": 500000.00,
+    "maxPaymentRelationFee": 50000.00,
+    "maxPaymentCurrentCapitalFee": 0.00,
+    "maxPaymentRegularExpenseFee": 0.00,
+    "maxPaymentOtherCapitalFee": 1000000.00,
+    "maxPaymentOtherExpenseFee": 500000.00
+  },
+  {
+    "employeeNo": "005234",
+    "fullName": "李小芳",
+    "jobTitleCode": "M12",
+    "jobTitleName": "經理",
+    "layerCode": "4",
+    "layerName": "總公司課級主管",
+    "layerDescription": "店內部級主管.總公司課級主管",
+    "formOrgCode": "100114330",
+    "formOrgName": "人事課",
+    "formulaOrgCode": "100114330",
+    "formulaOrgName": "人事課",
+    "maxExpenseFee": 50000.00,
+    "maxCapitalFee": 100000.00,
+    "maxPaymentPenaltyFee": 20000.00,
+    "maxPaymentRelationFee": 10000.00,
+    "maxPaymentCurrentCapitalFee": 200000.00,
+    "maxPaymentRegularExpenseFee": 100000.00,
+    "maxPaymentOtherCapitalFee": 100000.00,
+    "maxPaymentOtherExpenseFee": 50000.00
+  }
+]
+```
+
+#### Python 範例
+
+```python
+import requests
+
+def get_all_approval_amounts():
+    url = "http://your-server/api/v1/bpm/approval-amounts"
+  
+    headers = {
+        "Authorization": "xxx"
+    }
+  
+    try:
+        response = requests.get(url, headers=headers)
+  
+        if response.status_code == 200:
+            return response.json()
+        elif response.status_code == 204:
+            print("未找到員工審批金額資訊")
+            return []
+        else:
+            print(f"錯誤: {response.status_code}, {response.text}")
+            return None
+    except Exception as e:
+        print(f"請求異常: {str(e)}")
+        return None
+
+# 使用範例
+approval_amounts = get_all_approval_amounts()
+if approval_amounts:
+    for amount in approval_amounts[:3]:  # 只顯示前3筆
+        print(f"員工: {amount['fullName']} ({amount['employeeNo']})")
+        print(f"職稱: {amount['jobTitleName']}")
+        print(f"層級: {amount['layerDescription']}")
+        print(f"費用審批上限: {amount['maxExpenseFee']}")
+        print(f"資本支出審批上限: {amount['maxCapitalFee']}")
+        print("---") 
 ```
