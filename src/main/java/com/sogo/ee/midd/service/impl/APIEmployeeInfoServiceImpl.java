@@ -321,6 +321,7 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 		for (APIEmployeeInfo apiEmployeeInfo : employeeInfoList) {
 			dbEmployeeInfo = employeeInfoRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
 			if (dbEmployeeInfo == null) {
+				apiEmployeeInfo.setEmailAddress(apiEmployeeInfo.getEmployeeNo() + "@sogo.com.tw");
 				employeeInfoRepo.save(apiEmployeeInfo);
 				APIEmployeeInfoActionLog actionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "C",
 						"employeeNo", null, apiEmployeeInfo.getEmployeeNo());
