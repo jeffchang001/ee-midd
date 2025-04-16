@@ -60,8 +60,10 @@ public class APIOrganizationRelationServiceImpl implements APIOrganizationRelati
             List<APIOrganizationRelation> newOrganizationRelationList = apiOrganizationRelationResponse.getResult();
             log.info("Parsed OrganizationRelation list size: " + newOrganizationRelationList.size());
 
-            organizationRelationRepo.truncateTable();;
-            organizationRelationRepo.saveAll(newOrganizationRelationList);
+            if (newOrganizationRelationList != null && !newOrganizationRelationList.isEmpty()) {
+                organizationRelationRepo.truncateTable();;
+                organizationRelationRepo.saveAll(newOrganizationRelationList);
+            }
 
         } catch (Exception e) {
             log.error("Error in processOrganizationRelation", e);

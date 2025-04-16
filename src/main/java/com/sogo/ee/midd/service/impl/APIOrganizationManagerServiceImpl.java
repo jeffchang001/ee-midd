@@ -35,11 +35,12 @@ public class APIOrganizationManagerServiceImpl implements APIOrganizationManager
 
         List<APIOrganizationManager> newOrganizationManagerList = apiOrganizationManagerDto.getResult();
         // 儲存 company 資料
-        orgManagerRepo.truncateTable();
-        orgManagerRepo.saveAll(newOrganizationManagerList);
+        if (newOrganizationManagerList != null && !newOrganizationManagerList.isEmpty()) {
+            orgManagerRepo.truncateTable();
+            orgManagerRepo.saveAll(newOrganizationManagerList);
+        }
     }
 
-    @SuppressWarnings("null")
     @Override
     @Transactional
     public void processOrganizationManager(ResponseEntity<String> response) throws Exception {
@@ -55,9 +56,10 @@ public class APIOrganizationManagerServiceImpl implements APIOrganizationManager
             List<APIOrganizationManager> newOrganizationManagerList = apiOrganizationManagerDto.getResult();
             log.info("Parsed newOrganizationManagerList list size: "
                     + (newOrganizationManagerList != null ? newOrganizationManagerList.size() : "null"));
-
-            orgManagerRepo.truncateTable();
-            orgManagerRepo.saveAll(newOrganizationManagerList);
+            if (newOrganizationManagerList != null && !newOrganizationManagerList.isEmpty()) {
+                orgManagerRepo.truncateTable();
+                orgManagerRepo.saveAll(newOrganizationManagerList);
+            }
 
         } catch (Exception e) {
             log.error("Error in processOrganizationManager", e);

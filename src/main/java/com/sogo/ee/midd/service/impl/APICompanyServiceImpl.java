@@ -39,7 +39,6 @@ public class APICompanyServiceImpl implements APICompanyService {
         companyRepo.saveAll(newCompanyList);
     }
 
-    @SuppressWarnings("null")
     @Override
     @Transactional
     public void processCompany(ResponseEntity<String> response) throws Exception {
@@ -50,14 +49,17 @@ public class APICompanyServiceImpl implements APICompanyService {
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.registerModule(new JavaTimeModule());
             APICompanyDto apiCompanyDto = objectMapper.readValue(response.getBody(),
-                APICompanyDto.class);
+                    APICompanyDto.class);
 
-                List<APICompany> newCompanyList = apiCompanyDto.getResult();
+            List<APICompany> newCompanyList = apiCompanyDto.getResult();
             log.info("Parsed newCompanyList list size: "
                     + (newCompanyList != null ? newCompanyList.size() : "null"));
 
-            companyRepo.truncateTable();
-            companyRepo.saveAll(newCompanyList);
+            // 步驟 1：清空當前表格並插入新數據
+            if (newCompanyList != null && !newCompanyList.isEmpty()) {
+                companyRepo.truncateTable();
+                companyRepo.saveAll(newCompanyList);
+            }
 
         } catch (Exception e) {
             log.error("Error in processOrganizationRelation", e);
