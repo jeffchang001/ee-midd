@@ -25,4 +25,7 @@ public class Fse7enOrgMemberStructId implements Serializable {
      * 組織代碼
      */
     private String orgCode;
+
+
+    private String isMainJob;
 } 

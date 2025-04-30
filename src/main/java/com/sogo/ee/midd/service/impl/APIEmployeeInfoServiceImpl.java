@@ -136,6 +136,7 @@ public class APIEmployeeInfoServiceImpl implements APIEmployeeInfoService {
 		for (APIEmployeeInfo apiEmployeeInfo : employeeInfoList) {
 			dbEmployeeInfo = employeeInfoRepo.findByEmployeeNo(apiEmployeeInfo.getEmployeeNo());
 			if (dbEmployeeInfo == null) {
+				// 新增員工的 email 強制改為 員工編號@sogo.com.tw
 				apiEmployeeInfo.setEmailAddress(apiEmployeeInfo.getEmployeeNo() + "@sogo.com.tw");
 				employeeInfoRepo.save(apiEmployeeInfo);
 				APIEmployeeInfoActionLog actionLog = new APIEmployeeInfoActionLog(apiEmployeeInfo.getEmployeeNo(), "C",
