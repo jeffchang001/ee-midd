@@ -182,7 +182,6 @@ BEGIN
     CROSS JOIN org_hierarchy oh
     WHERE 
         ei.employee_no = p_employee_no
-		and  ei.employed_status='1'
     ORDER BY 
         oh.org_level;
 END;

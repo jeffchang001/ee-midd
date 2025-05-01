@@ -77,6 +77,7 @@ public class ADSyncServiceImpl implements ADSyncService {
                 Map<String, String> updatedFields = new HashMap<>();
                 for (APIEmployeeInfoActionLog log : logs) {
                     updatedFields.put(log.getFieldName(), log.getNewValue());
+                    updatedFields.put("oldValue", log.getOldValue());
                 }
                 adSyncDto.setUpdatedFields(updatedFields);
             }
