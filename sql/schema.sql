@@ -18,20 +18,6 @@ SET row_security = off;
 SET search_path TO public, pg_catalog;
 
 --
--- Name: adminpack; Type: EXTENSION; Schema: -; Owner: -
---
-
-CREATE EXTENSION IF NOT EXISTS adminpack WITH SCHEMA pg_catalog;
-
-
---
--- Name: EXTENSION adminpack; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION adminpack IS 'administrative functions for PostgreSQL';
-
-
---
 -- Name: find_approval_manager(character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1356,6 +1342,13 @@ LEFT JOIN
     api_organization_manager aom ON aei.employee_no = aom.employee_no
 LEFT JOIN 
     api_organization ao ON aei.form_org_code = ao.org_code
+WHERE
+     -- 只顯示 is_main_job='1' 的記錄
+    (CASE
+        WHEN aom.manager_role_type IS NULL THEN '1'
+        WHEN aom.manager_role_type = '1' OR aom.manager_role_type = '' THEN '1'
+        ELSE '0'
+    END) = '1'
 ORDER BY 
     aei.employee_no
 WITH NO DATA;
@@ -1691,5 +1684,12 @@ LEFT JOIN
     public.approved_amount_for_each_layer approvedAmount ON form_org.layer_code = approvedAmount.layer_code
 where emp.employed_status in ('1', '2') and memberStruct.approve_right='1'
 order by layer_code;
+
+REFRESH MATERIALIZED VIEW fse7en_org_deptgradeinfo;
+REFRESH MATERIALIZED VIEW fse7en_org_deptinfo;
+REFRESH MATERIALIZED VIEW fse7en_org_deptstruct;
+REFRESH MATERIALIZED VIEW fse7en_org_jobtitle2grade;
+REFRESH MATERIALIZED VIEW fse7en_org_memberinfo;
+REFRESH MATERIALIZED VIEW fse7en_org_memberstruct;
 
 
