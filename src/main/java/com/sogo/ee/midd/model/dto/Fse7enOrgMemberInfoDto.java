@@ -66,6 +66,12 @@ public class Fse7enOrgMemberInfoDto {
     private String azureAccount;
 
     /**
+     * job flag
+     */
+    @JsonProperty("jobFlag")
+    private String jobFlag;
+
+    /**
      * 將 Fse7enOrgMemberInfo 實體轉換為 DTO
      *
      * @param entity Fse7enOrgMemberInfo 實體
@@ -84,6 +90,7 @@ public class Fse7enOrgMemberInfoDto {
                 .isTerminated(entity.getIsTerminated())
                 .hireDate(entity.getHireDate())
                 .azureAccount(entity.getAzureAccount())
+                .jobFlag(entity.getJobFlag())
                 .build();
     }
 

@@ -70,4 +70,10 @@ public class Fse7enOrgMemberInfo implements Serializable {
      */
     @Column(name = "azureaccount")
     private String azureAccount;
+
+    /**
+     * job flag
+     */
+    @Column(name = "job_flag")
+    private String jobFlag;
 }

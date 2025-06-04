@@ -1237,7 +1237,12 @@ CREATE MATERIALIZED VIEW public.fse7en_org_memberinfo AS
             ELSE '1'::text
         END AS isterminated,
     api_employee_info.hire_date,
-    api_employee_info.email_address AS azureaccount
+    api_employee_info.email_address AS azureaccount,
+    CASE 
+        WHEN api_employee_info.job_flag IN ('1', '4') THEN 'BU'
+        WHEN api_employee_info.job_flag IS NULL THEN null
+        ELSE 'ADM' 
+    END as job_flag
    FROM public.api_employee_info
   ORDER BY
         CASE
