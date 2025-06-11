@@ -205,7 +205,7 @@ public class FetchRadarDataController {
 	}
 
 	@PostMapping("/system/initialization")
-	@Operation(summary = "初始化系統", description = "執行系統初始化，同步所有必要的數據")
+	@Operation(summary = "初始化系統(只有成雲的人才可以點！！！)", description = "執行系統初始化，同步所有必要的數據")
 	@ApiResponse(responseCode = "200", description = "系統初始化成功")
 	@ApiResponse(responseCode = "500", description = "系統初始化失敗")
 	public ResponseEntity<String> initDatabase() {
