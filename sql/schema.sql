@@ -1260,100 +1260,122 @@ ALTER TABLE public.fse7en_org_memberinfo OWNER TO postgres;
 
 
 CREATE MATERIALIZED VIEW public.fse7en_org_memberstruct AS
-WITH employee_managers AS (
-    -- 1. 取得員工基本資料和表單單位的主管
-    SELECT 
-        aei.employee_no,
-        aei.full_name,
-        aei.form_org_code,
-        aei.form_org_name,
-        aei.formula_org_code,
-        aei.formula_org_name,
-        aei.job_title_code,
-        aei.employed_status,
-        -- 先找該員工所屬表單單位的主管
-        (SELECT aom.employee_no 
-         FROM api_organization_manager aom 
-         WHERE aom.org_code = aei.form_org_code order by aom.effective_date desc
-         LIMIT 1) AS direct_manager_employee_no,
-        -- 找出上層單位代碼
-        (SELECT aor.parent_org_code 
-         FROM api_organization_relation aor 
-         WHERE aor.org_code = aei.form_org_code 
-         AND aor.org_tree_type = '2' 
-         LIMIT 1) AS parent_org_code
-    FROM api_employee_info aei
-),
-employee_with_approve_right AS (
-    -- 2. 判斷審批權限
+WITH RECURSIVE employee_managers AS (
+    SELECT aei_1.employee_no,
+           aei_1.full_name,
+           aei_1.form_org_code,
+           aei_1.form_org_name,
+           aei_1.formula_org_code,
+           aei_1.formula_org_name,
+           aei_1.job_title_code,
+           aei_1.employed_status,
+           -- 修正：排除自己當主管的情況，並確保主管在職狀態
+           ( SELECT aom_1.employee_no
+             FROM api_organization_manager aom_1
+             JOIN api_employee_info aei_mgr ON aom_1.employee_no = aei_mgr.employee_no
+            WHERE aom_1.org_code::text = aei_1.form_org_code::text
+              AND aom_1.employee_no::text <> aei_1.employee_no::text
+              AND aei_mgr.employed_status in ('1', '2')  -- 主管在職狀態
+            ORDER BY aom_1.effective_date DESC
+           LIMIT 1) AS direct_manager_employee_no,
+           -- 找上層組織
+           ( SELECT aor.parent_org_code
+             FROM api_organization_relation aor
+            WHERE aor.org_code::text = aei_1.form_org_code::text
+              AND aor.org_tree_type::text = '2'::text
+           LIMIT 1) AS parent_org_code
+    FROM api_employee_info aei_1
+), org_hierarchy AS (
+    -- 遞迴查找組織階層，直到找到不是自己的主管
     SELECT 
         em.employee_no,
-        em.full_name,
-        em.form_org_code,
-        em.form_org_name,
-        em.formula_org_code,
-        em.formula_org_name,
-        em.job_title_code,
-        em.employed_status,
-        CASE 
-            -- 2a. 如果找到的單位主管不等於自己，顯示該主管
-            WHEN em.direct_manager_employee_no IS NOT NULL AND em.direct_manager_employee_no != em.employee_no THEN
-                em.direct_manager_employee_no
-            -- 2b. 如果找到的單位主管等於自己，尋找上層單位主管
-            WHEN em.direct_manager_employee_no = em.employee_no AND em.parent_org_code IS NOT NULL THEN
-                (SELECT aom.employee_no 
-                 FROM api_organization_manager aom 
-                 WHERE aom.org_code = em.parent_org_code order by aom.effective_date desc
-                 LIMIT 1)
-            ELSE NULL
-        END AS approval_manager_employee_no
+        em.form_org_code as current_org_code,
+        em.parent_org_code,
+        1 as level
+    FROM employee_managers em
+    
+    UNION ALL
+    
+    SELECT 
+        oh.employee_no,
+        oh.parent_org_code as current_org_code,
+        ( SELECT aor.parent_org_code
+          FROM api_organization_relation aor
+         WHERE aor.org_code::text = oh.parent_org_code::text
+           AND aor.org_tree_type::text = '2'::text
+        LIMIT 1) as parent_org_code,
+        oh.level + 1
+    FROM org_hierarchy oh
+    WHERE oh.parent_org_code IS NOT NULL 
+      AND oh.level < 10  -- 防止無限遞迴
+), employee_with_approve_right AS (
+    SELECT em.employee_no,
+           em.full_name,
+           em.form_org_code,
+           em.form_org_name,
+           em.formula_org_code,
+           em.formula_org_name,
+           em.job_title_code,
+           em.employed_status,
+           CASE
+               -- 先檢查是否有直屬主管（不是自己且在職）
+               WHEN em.direct_manager_employee_no IS NOT NULL 
+               THEN em.direct_manager_employee_no
+               -- 如果沒有，則遞迴往上找組織主管（不是自己且在職）
+               ELSE ( SELECT aom.employee_no
+                      FROM org_hierarchy oh
+                      JOIN api_organization_manager aom ON aom.org_code::text = oh.current_org_code::text
+                      JOIN api_employee_info aei_mgr ON aom.employee_no = aei_mgr.employee_no
+                     WHERE oh.employee_no = em.employee_no
+                       AND aom.employee_no::text <> em.employee_no::text
+                       AND aei_mgr.employed_status in ('1', '2')  -- 主管在職狀態
+                     ORDER BY oh.level ASC, aom.effective_date DESC
+                    LIMIT 1)
+           END AS approval_manager_employee_no
     FROM employee_managers em
 )
--- 最終結果
-SELECT 
-    DISTINCT
-    aei.employee_no,
-    aei.full_name,
-    aei.formula_org_code AS org_code,
-    aei.formula_org_name AS org_name,
-    aei.job_title_code,
-    regexp_replace(aei.job_title_code::character varying::text, '[A-Za-z]', '', 'g') AS job_grade,
-    CASE
-        -- is_main_job 邏輯更新: 檢查 ManagerRoleType 是否為 '1' 或 ''
-        WHEN aom.manager_role_type IS NULL THEN '1'  -- 如果沒有找到記錄，預設為主要職位
-        WHEN aom.manager_role_type = '1' OR aom.manager_role_type = '' THEN '1'
-        ELSE '0'
-    END AS is_main_job,
-    CASE 
-        -- 如果員工是某人的審批主管，則設為 1
-        WHEN EXISTS (
-            SELECT 1 FROM employee_with_approve_right ewar 
-            WHERE ewar.approval_manager_employee_no = aei.employee_no
-        ) THEN '1'
-        ELSE '0'
-    END AS approve_right,
-    CASE 
-        WHEN aei.employed_status = '1' THEN '1'
-        ELSE '0'
-    END AS enable,
-    (SELECT (ewar.approval_manager_employee_no::text || '@' || a2.formula_org_code::text)
-     FROM employee_with_approve_right ewar
-     JOIN api_employee_info a2 ON ewar.approval_manager_employee_no = a2.employee_no
-     WHERE ewar.employee_no = aei.employee_no
-     LIMIT 1) AS instructor
-FROM 
-    api_employee_info aei
-LEFT JOIN 
-    api_organization_manager aom ON aei.employee_no = aom.employee_no
-LEFT JOIN 
-    api_organization ao ON aei.form_org_code = ao.org_code
+SELECT DISTINCT aei.employee_no,
+       aei.full_name,
+       aei.formula_org_code AS org_code,
+       aei.formula_org_name AS org_name,
+       aei.job_title_code,
+       regexp_replace(aei.job_title_code::character varying::text, '[A-Za-z]'::text, ''::text, 'g'::text) AS job_grade,
+       CASE
+           WHEN aom.manager_role_type IS NULL THEN '1'::text
+           WHEN aom.manager_role_type::text = '1'::text OR aom.manager_role_type::text = ''::text THEN '1'::text
+           ELSE '0'::text
+       END AS is_main_job,
+       CASE
+           WHEN (EXISTS ( SELECT 1
+                         FROM employee_with_approve_right ewar
+                        WHERE ewar.approval_manager_employee_no::text = aei.employee_no::text)) THEN '1'::text
+           ELSE '0'::text
+       END AS approve_right,
+       CASE
+           WHEN aei.employed_status::text = '1'::text THEN '1'::text
+           ELSE '0'::text
+       END AS enable,
+       -- 修正 instructor：主管員工編號@主管的formula_org_code，確保主管在職
+       ( SELECT CASE 
+                   WHEN ewar.approval_manager_employee_no IS NOT NULL 
+                   THEN (ewar.approval_manager_employee_no::text || '@'::text) || a2.formula_org_code::text
+                   ELSE NULL 
+                END
+         FROM employee_with_approve_right ewar
+           LEFT JOIN api_employee_info a2 ON ewar.approval_manager_employee_no::text = a2.employee_no::text
+        WHERE ewar.employee_no::text = aei.employee_no::text 
+          AND a2.employed_status in ('1', '2')  -- 最終確認主管在職狀態
+       ORDER BY aom.effective_date DESC  -- 按生效日期排序，取最近的
+       LIMIT 1) AS instructor
+FROM api_employee_info aei
+  LEFT JOIN api_organization_manager aom ON aei.employee_no::text = aom.employee_no::text
+  LEFT JOIN api_organization ao ON aei.form_org_code::text = ao.org_code::text
 WHERE
-     -- 只顯示 is_main_job='1' 的記錄
-    (CASE
-        WHEN aom.manager_role_type IS NULL THEN '1'
-        WHEN aom.manager_role_type = '1' OR aom.manager_role_type = '' THEN '1'
-        ELSE '0'
-    END) = '1'
+    CASE
+        WHEN aom.manager_role_type IS NULL THEN '1'::text
+        WHEN aom.manager_role_type::text = '1'::text OR aom.manager_role_type::text = ''::text THEN '1'::text
+        ELSE '0'::text
+    END = '1'::text
 ORDER BY 
     aei.employee_no
 WITH NO DATA;
@@ -1696,5 +1718,79 @@ REFRESH MATERIALIZED VIEW fse7en_org_deptstruct;
 REFRESH MATERIALIZED VIEW fse7en_org_jobtitle2grade;
 REFRESH MATERIALIZED VIEW fse7en_org_memberinfo;
 REFRESH MATERIALIZED VIEW fse7en_org_memberstruct;
+
+--EHR_EMPLOYEE(table name)
+CREATE OR REPLACE VIEW view_core_ehr_employee AS
+SELECT 
+  employee_no, 
+  full_name, 
+  formula_org_code, 
+  job_title_code, 
+  job_title_name,
+  position_code, 
+  job_grade_code, 
+  job_level_code, 
+  to_char(hire_date, 'yyyy-MM-dd') as hire_date, 
+  to_char(resignation_date, 'yyyy-MM-dd') as resignation_date, 
+  (
+    SELECT 
+      manager_employee_no 
+    FROM 
+      Find_approval_manager(employee_no, '0')
+  ) AS manager_employee_no, 
+  (
+    SELECT 
+      manager_full_name 
+    FROM 
+      Find_approval_manager(employee_no, '0')
+  ) AS manager_full_name, 
+  employed_status, 
+  email_address 
+FROM 
+  api_employee_info ami;
+
+
+--EHR_DEPARTMENT
+CREATE OR REPLACE VIEW view_core_ehr_department AS
+select 
+  ao.org_code, 
+  ao.org_name as org_abbr_name, 
+  ao.org_name, 
+  (
+    select 
+      employee_no 
+    from 
+      api_organization_manager 
+    where 
+      manager_role_type is null 
+      or manager_role_type = '' 
+      and org_code = aor.parent_org_code 
+    order by 
+      effective_date desc 
+    limit 
+      1
+  ) as manager_employee_no, 
+  (
+    select 
+      full_name 
+    from 
+      api_organization_manager 
+    where 
+      manager_role_type is null 
+      or manager_role_type = '' 
+      and org_code = aor.parent_org_code 
+    order by 
+      effective_date desc 
+    limit 
+      1
+  ) as manager_full_name, 
+  aor.parent_org_code as parent_org_code, 
+  to_char(ao.start_date, 'yyyy-MM-dd')  as start_date, 
+  to_char(ao.end_date, 'yyyy-MM-dd') as end_date, 
+  false as is_virtual 
+from 
+  api_organization ao 
+  left outer join api_organization_relation aor on ao.org_code = aor.org_code 
+  and aor.org_tree_type = '0';
 
 
