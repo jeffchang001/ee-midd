@@ -1,5 +1,6 @@
 package com.sogo.ee.midd.controller;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
@@ -39,11 +40,11 @@ public class CoreApiController {
 
     // ========== 部門相關 API ==========
 
-    /**
-     * 獲取所有部門資訊
-     *
-     * @return 部門資訊列表
-     */
+    // /**
+    //  * 獲取所有部門資訊
+    //  *
+    //  * @return 部門資訊列表
+    //  */
     // @Operation(summary = "獲取所有部門資訊", description = "此 API 端點返回所有部門資訊的列表")
     // @ApiResponse(responseCode = "200", description = "成功檢索到部門資訊")
     // @ApiResponse(responseCode = "204", description = "未找到部門資訊")
@@ -98,12 +99,12 @@ public class CoreApiController {
         }
     }
 
-    /**
-     * 根據部門名稱搜尋部門
-     *
-     * @param orgName 部門名稱 (支援模糊搜尋)
-     * @return 部門資訊列表
-     */
+    // /**
+    //  * 根據部門名稱搜尋部門
+    //  *
+    //  * @param orgName 部門名稱 (支援模糊搜尋)
+    //  * @return 部門資訊列表
+    //  */
     // @Operation(summary = "根據部門名稱搜尋部門", description = "此 API 端點根據部門名稱進行模糊搜尋，返回匹配的部門列表")
     // @ApiResponse(responseCode = "200", description = "成功檢索到部門資訊")
     // @ApiResponse(responseCode = "204", description = "未找到匹配的部門")
@@ -128,12 +129,12 @@ public class CoreApiController {
     //     }
     // }
 
-    /**
-     * 根據上級部門代碼獲取子部門
-     *
-     * @param parentOrgCode 上級部門代碼
-     * @return 子部門列表
-     */
+    // /**
+    //  * 根據上級部門代碼獲取子部門
+    //  *
+    //  * @param parentOrgCode 上級部門代碼
+    //  * @return 子部門列表
+    //  */
     // @Operation(summary = "根據上級部門代碼獲取子部門", description = "此 API 端點根據上級部門代碼返回所有子部門")
     // @ApiResponse(responseCode = "200", description = "成功檢索到子部門資訊")
     // @ApiResponse(responseCode = "204", description = "未找到子部門")
@@ -160,11 +161,11 @@ public class CoreApiController {
 
     // ========== 員工相關 API ==========
 
-    /**
-     * 獲取所有員工資訊
-     *
-     * @return 員工資訊列表
-     */
+    // /**
+    //  * 獲取所有員工資訊
+    //  *
+    //  * @return 員工資訊列表
+    //  */
     // @Operation(summary = "獲取所有員工資訊", description = "此 API 端點返回所有員工資訊的列表")
     // @ApiResponse(responseCode = "200", description = "成功檢索到員工資訊")
     // @ApiResponse(responseCode = "204", description = "未找到員工資訊")
@@ -219,12 +220,12 @@ public class CoreApiController {
         }
     }
 
-    /**
-     * 根據員工姓名搜尋員工
-     *
-     * @param fullName 員工姓名 (支援模糊搜尋)
-     * @return 員工資訊列表
-     */
+    // /**
+    //  * 根據員工姓名搜尋員工
+    //  *
+    //  * @param fullName 員工姓名 (支援模糊搜尋)
+    //  * @return 員工資訊列表
+    //  */
     // @Operation(summary = "根據員工姓名搜尋員工", description = "此 API 端點根據員工姓名進行模糊搜尋，返回匹配的員工列表")
     // @ApiResponse(responseCode = "200", description = "成功檢索到員工資訊")
     // @ApiResponse(responseCode = "204", description = "未找到匹配的員工")
@@ -249,12 +250,12 @@ public class CoreApiController {
     //     }
     // }
 
-    /**
-     * 根據部門代碼獲取該部門的員工
-     *
-     * @param formulaOrgCode 部門代碼
-     * @return 員工資訊列表
-     */
+    // /**
+    //  * 根據部門代碼獲取該部門的員工
+    //  *
+    //  * @param formulaOrgCode 部門代碼
+    //  * @return 員工資訊列表
+    //  */
     // @Operation(summary = "根據部門代碼獲取員工", description = "此 API 端點根據部門代碼返回該部門的所有員工")
     // @ApiResponse(responseCode = "200", description = "成功檢索到員工資訊")
     // @ApiResponse(responseCode = "204", description = "未找到該部門的員工")
@@ -279,12 +280,12 @@ public class CoreApiController {
     //     }
     // }
 
-    /**
-     * 根據在職狀態獲取員工
-     *
-     * @param employedStatus 在職狀態
-     * @return 員工資訊列表
-     */
+    // /**
+    //  * 根據在職狀態獲取員工
+    //  *
+    //  * @param employedStatus 在職狀態
+    //  * @return 員工資訊列表
+    //  */
     // @Operation(summary = "根據在職狀態獲取員工", description = "此 API 端點根據在職狀態返回員工列表")
     // @ApiResponse(responseCode = "200", description = "成功檢索到員工資訊")
     // @ApiResponse(responseCode = "204", description = "未找到該狀態的員工")
@@ -309,12 +310,12 @@ public class CoreApiController {
     //     }
     // }
 
-    /**
-     * 根據主管員工編號獲取下屬員工
-     *
-     * @param managerEmployeeNo 主管員工編號
-     * @return 下屬員工資訊列表
-     */
+    // /**
+    //  * 根據主管員工編號獲取下屬員工
+    //  *
+    //  * @param managerEmployeeNo 主管員工編號
+    //  * @return 下屬員工資訊列表
+    //  */
     // @Operation(summary = "根據主管員工編號獲取下屬員工", description = "此 API 端點根據主管員工編號返回所有下屬員工")
     // @ApiResponse(responseCode = "200", description = "成功檢索到下屬員工資訊")
     // @ApiResponse(responseCode = "204", description = "未找到下屬員工")

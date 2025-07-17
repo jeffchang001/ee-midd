@@ -1719,7 +1719,7 @@ REFRESH MATERIALIZED VIEW fse7en_org_jobtitle2grade;
 REFRESH MATERIALIZED VIEW fse7en_org_memberinfo;
 REFRESH MATERIALIZED VIEW fse7en_org_memberstruct;
 
---EHR_EMPLOYEE(table name)
+--EHR_EMPLOYEE
 CREATE OR REPLACE VIEW view_core_ehr_employee AS
 SELECT 
   employee_no, 
